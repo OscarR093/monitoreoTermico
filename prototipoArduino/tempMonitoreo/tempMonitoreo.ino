@@ -55,7 +55,7 @@ void loop() {
 
     // Aplicar compensación de error
     float temperaturaCompensada = compensarTemperatura(temperaturaLeida);
-    Serial.print(temperaturaLeida);
+    Serial.println(temperaturaLeida);
     
     // Enviar la temperatura a través de Ethernet
     EthernetClient client = server.available();
