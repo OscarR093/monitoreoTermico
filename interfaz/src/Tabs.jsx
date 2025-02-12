@@ -6,13 +6,13 @@ import horno from "./assets/horno.gif";
 const TabsComponent = () => {
   const [tabsData, setTabsData] = useState([
     { name: "Torre Fusora", temperature: "Conectando...", image: "" },
-    { name: "Linea 1", temperature: "30°C", image: "" },
-    { name: "Linea 2", temperature: "22°C", image: "" },
-    { name: "Linea 3", temperature: "28°C", image: "" },
-    { name: "Linea 4", temperature: "20°C", image: "" },
-    { name: "Linea 7", temperature: "26°C", image: "" },
-    { name: "Ep 1", temperature: "24°C", image: "" },
-    { name: "Ep 2", temperature: "24°C", image: "" },
+    { name: "Linea 1", temperature: "Conectando...", image: "" },
+    { name: "Linea 2", temperature: "Conectando..", image: "" },
+    { name: "Linea 3", temperature: "Conectando..", image: "" },
+    { name: "Linea 4", temperature: "Conectando..", image: "" },
+    { name: "Linea 7", temperature: "Conectando..", image: "" },
+    { name: "Ep 1", temperature: "Conectando..", image: "" },
+    { name: "Ep 2", temperature: "Conectando..", image: "" },
   ]);
 
   useEffect(() => {
@@ -20,6 +20,7 @@ const TabsComponent = () => {
 
     ws.onopen = () => {
       console.log("Conectado al servidor WebSocket");
+      ws.send("react-client")
     };
 
     ws.onmessage = (event) => {
