@@ -2,10 +2,15 @@ import socket
 import flet as ft
 import threading
 import time
+import websocket
+import json
 
 # IP y puerto de Arduino
 ino_ip = "192.168.0.50"
 ino_port = 80
+
+# URL del WebSocket
+websocket_url = "ws://localhost:8080"
 
 # Función para conectar al servidor
 def conectar(label, page):
@@ -35,25 +40,45 @@ def verificar(sock, label, page):
 # Función para obtener la temperatura
 def obtener_temperatura(label, page):
     while True:
+        # Conectar al WebSocket
+        try:
+            ws = websocket.WebSocket()
+            ws.connect(websocket_url)
+            print("Conectado al WebSocket")
+        except Exception as e:
+            print(f"Error al conectar al WebSocket: {e}. Reconectando...")
+            time.sleep(3)
+            continue
+
+        # Conectar al Arduino
         sock = conectar(label, page)
         try:
             while True:
                 if verificar(sock, label, page):
-                    # Recibir datos
+                    # Recibir datos del Arduino
                     mensaje = b"GET /Temperatura\r\n"
                     sock.sendall(mensaje)
                     respuesta = sock.recv(1024).decode().strip()
                     # Actualizar el label con el valor recibido
                     label.value = f"Temperatura: {respuesta} °C"
                     page.update()
+
+                    # Enviar la temperatura al WebSocket
+                    try:
+                        ws.send(respuesta)
+                        print(f"Temperatura enviada al WebSocket: {respuesta}")
+                    except Exception as e:
+                        print(f"Error al enviar al WebSocket: {e}")
+                        break  # Salir del bucle interno para reconectar
                 else:
-                    print("La conexión se perdió. Reconectando...")
+                    print("La conexión con el Arduino se perdió. Reconectando...")
                     break  # Salir del bucle interno para reconectar
         except Exception as e:
             label.value = f"Error: {e}. Reconectando..."
             page.update()
         finally:
             sock.close()
+            ws.close()
         time.sleep(3)  # Esperar antes de intentar reconectar
 
 # Interfaz
