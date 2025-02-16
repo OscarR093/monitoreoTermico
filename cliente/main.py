@@ -2,6 +2,7 @@ import flet as ft
 import threading
 from config.config import equipos
 from services.arduino_connection import ArduinoConnection
+from services.simulatedArduino import SimulatedArduinoConnection
 from services.websocket_manager import websocket_sender
 
 def main(page: ft.Page):
@@ -18,9 +19,15 @@ def main(page: ft.Page):
     # Iniciar hilos para cada equipo
     for equipo in equipos:
         equipo_conn = ArduinoConnection(
-            equipo["ip"], equipo["port"], labels[equipo['nombre']], page, equipo['nombre']
+            equipo["ip"], equipo["port"], labels[equipo['nombre']], page, equipo['nombre'], equipo['tag']
         )
         threading.Thread(target=equipo_conn.get_temperature, daemon=True).start()
+    #SIMULACION, ELIMINAR DESPUES    
+    for equipo in equipos:
+        if equipo['tag']!="TF":
+            simulEquipo_conn=SimulatedArduinoConnection(equipo["ip"], equipo["port"], labels[equipo['nombre']], page, equipo['nombre'], equipo['tag'])
+            threading.Thread(target=simulEquipo_conn.Simget_temperature, daemon=True).start()
+    #fIN DE SIMULACION
 
     # Iniciar hilo para el WebSocket
     threading.Thread(target=websocket_sender, daemon=True).start()
