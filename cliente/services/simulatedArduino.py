@@ -2,7 +2,7 @@ import socket
 import time
 import services.shared as shared
 
-class ArduinoConnection:
+class SimulatedArduinoConnection:
     def __init__(self, ip, port, label, page, nombre, tag):
         self.ip = ip
         self.port = port
@@ -11,27 +11,15 @@ class ArduinoConnection:
         self.nombre = nombre
         self.tag=tag
         self.sock = None
+        
 
-    def connect(self):
+    def Simget_temperature(self):
+        respuesta=0
         while True:
             try:
-                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.sock.settimeout(5)
-                self.sock.connect((self.ip, self.port))
-                self.update_label(f"Conectado a {self.ip}")
-                return self.sock
-            except Exception as e:
-                self.update_label(f"Error: {e}. Reconectando a {self.nombre}...")
-                time.sleep(5)
-
-    def get_temperature(self):
-        while True:
-            try:
-                self.connect()
                 while True:
-                    mensaje = b"GET /Temperatura\r\n"
-                    self.sock.sendall(mensaje)
-                    respuesta = self.sock.recv(1024).decode().strip()
+                    respuesta=respuesta+1
+                    time.sleep(2)
                     self.update_label(f"Temperatura de {self.nombre}: {respuesta} °C")
 
                     # Enviar al WebSocket si está activo
