@@ -23,10 +23,10 @@ def main(page: ft.Page):
         )
         threading.Thread(target=equipo_conn.get_temperature, daemon=True).start()
     #SIMULACION, ELIMINAR DESPUES    
-    for equipo in equipos:
-        if equipo['tag']!="TF":
-            simulEquipo_conn=SimulatedArduinoConnection(equipo["ip"], equipo["port"], labels[equipo['nombre']], page, equipo['nombre'], equipo['tag'])
-            threading.Thread(target=simulEquipo_conn.Simget_temperature, daemon=True).start()
+   # for equipo in equipos:
+    #    if equipo['tag']!="TF":
+     #       simulEquipo_conn=SimulatedArduinoConnection(equipo["ip"], equipo["port"], labels[equipo['nombre']], page, equipo['nombre'], equipo['tag'])
+      #      threading.Thread(target=simulEquipo_conn.Simget_temperature, daemon=True).start()
     #fIN DE SIMULACION
 
     # Iniciar hilo para el WebSocket

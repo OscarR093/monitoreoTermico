@@ -14,10 +14,6 @@ IPAddress ip(192, 168, 0, 50);
 #define W5500_CS 7  
 EthernetServer server(80);
 
-// Variables para filtro exponencial
-float temperaturaFiltrada = 0;
-const float alpha = 0.1;  // Coeficiente del filtro exponencial
-
 void setup() {
   Serial.begin(9600);
 
@@ -35,34 +31,22 @@ void setup() {
   Serial.println(Ethernet.localIP());
 }
 
-// Función para compensar el error
-float compensarTemperatura(float temperatura) {
-    // Corrección basada en los datos proporcionados
-    // Diferencia de 20°C a temperatura ambiente y ~100°C a 500°C
-    // Se estima una compensación lineal: error ≈ 0.2 * temperatura
-    float error = 0.01 * temperatura;  
-    return temperatura + error;
-}
-
-
 void loop() {
-    // Leer temperatura directamente del MAX31855
-    float temperaturaLeida = thermocouple.readCelsius();
-    if (isnan(temperaturaLeida)) {
-        Serial.println("Error al leer el termopar.");
-        return;  
-    }
+  // Leer temperatura directamente del MAX31855
+  float temperaturaLeida = thermocouple.readCelsius();
+  if (isnan(temperaturaLeida)) {
+    Serial.println("Error al leer el termopar.");
+    return;  
+  }
 
-    // Aplicar compensación de error
-    float temperaturaCompensada = compensarTemperatura(temperaturaLeida);
-    Serial.println(temperaturaLeida);
-    
-    // Enviar la temperatura a través de Ethernet
-    EthernetClient client = server.available();
-    if (client) {
-        Serial.println("Cliente conectado.");
-        client.print(String(temperaturaLeida, 2));  
-    }
+  Serial.println(temperaturaLeida);
+  
+  // Enviar la temperatura a través de Ethernet
+  EthernetClient client = server.available();
+  if (client) {
+    Serial.println("Cliente conectado.");
+    client.print(String(temperaturaLeida, 2));  
+  }
 
-    delay(1000);
+  delay(1000);
 }

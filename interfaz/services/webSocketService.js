@@ -9,19 +9,21 @@ const useWebSocket = (url, setTabsData) => {
     };
     const handleMessage = (event) => {
         const data = JSON.parse(event.data);
-        const newTemperature = data.message;
-        console.log("Temperatura recibida:", newTemperature);
-        const temperatureParts=newTemperature.split(":")
-        const temperatureTag=temperatureParts[0]
-        const temperatureValue = temperatureParts[1]
-        setTabsData((prevTabsData) =>
-        prevTabsData.map((tab) =>
-            tab.tag === temperatureTag
-            ? { ...tab, temperature: `${temperatureValue}°C` }
-            : tab
-        )
-        );
-    };
+        console.log("Datos recibidos 1:", data);
+
+        const { equipo, temperatura } = data; // Extraer directamente del JSON
+        console.log(equipo)
+        if (equipo && temperatura !== undefined) {
+            console.log(temperatura)
+            setTabsData((prevTabsData) =>
+                prevTabsData.map((tab) =>
+                    tab.tag === equipo
+                        ? { ...tab, temperature: `${temperatura}°C` }
+                        : tab
+                )
+            );
+        }
+    }
     const handleError = (error) => {
         console.error("Error en la conexión WebSocket:", error);
     };

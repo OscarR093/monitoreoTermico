@@ -32,10 +32,21 @@ wss.on('connection', function connection(ws) {
         // Si el mensaje proviene del cliente Python
         if (ws === pythonClient) {
             console.log('Mensaje recibido del cliente Python:', newMessage);
+            let messageToSend;
+        
+            // Intentar parsear newMessage como JSON, si falla, tratarlo como string
+            try {
+                messageToSend = JSON.parse(newMessage); // Si es JSON válido, lo convierte en objeto
+            } catch (error) {
+                // Si no es JSON (como "python-client" o "action: start"), mantenerlo como string
+                messageToSend = { message: newMessage }; // Envolver el string en un objeto
+            }
+        
             // Reenviar el mensaje a todos los clientes React conectados
             reactClients.forEach(client => {
                 if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify({ message: `${newMessage}` }));
+                    console.log('Enviando a React:', JSON.stringify(messageToSend)); // Para depurar
+                    client.send(JSON.stringify(messageToSend)); // Enviar como JSON
                 }
             });
         }
