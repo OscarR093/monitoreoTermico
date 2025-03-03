@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
+import "./styles.css";
 import horno from "./assets/horno.gif";
+import logo from "./assets/fagorlogo.png";
 import useWebSocket from "../services/webSocketService";
 
 const TabsComponent = () => {
@@ -21,6 +23,8 @@ const TabsComponent = () => {
 
   return (
     <Tabs>
+      <img src={logo} alt="Logo Fagor"/>
+      <h2>Monitoreo Térmico</h2>
       <TabList>
         {tabsData.map((tab) => (
           <Tab key={tab.id}>{tab.name}</Tab>
@@ -34,13 +38,7 @@ const TabsComponent = () => {
           <img
             src={horno}
             alt={`Imagen de ${tab.name}`}
-            style={{
-              width: "300px",
-              height: "300px",
-              display: "block",
-              margin: "10px auto",
-              borderRadius: "10px",
-            }}
+            className="graficoEnPantalla"
           />
         </TabPanel>
       ))}

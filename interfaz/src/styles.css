@@ -1,88 +1,192 @@
 /* src/styles.css */
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0; /* Fondo gris claro */
-    color: #333; /* Color de texto predeterminado */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-  }
-  
-  .App {
-    text-align: center;
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 80%;
-    max-width: 800px;
-  }
-  
-  h1 {
-    color: #ff0000; /* Rojo */
-    margin-bottom: 20px;
-  }
-  
-  .react-tabs {
-    text-align: left; /* Alinea el contenido de las pestañas a la izquierda */
-  }
-  
-  .react-tabs__tab-list {
-    border-bottom: 2px solid #ff0000; /* Rojo */
-    margin: 0 0 20px;
-    padding: 0;
-  }
-  
-  .react-tabs__tab {
-    display: inline-block;
-    border: 1px solid transparent;
-    border-bottom: none;
-    bottom: -1px;
-    position: relative;
-    list-style: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    color: #333;
-    font-weight: bold;
-  }
-  
-  .react-tabs__tab--selected {
-    background: #ff0000; /* Rojo */
-    color: white;
-    border-radius: 5px 5px 0 0;
-  }
-  .react-tabs__tab:hover:not(.react-tabs__tab--selected){
-    background:white; /* Rojo */
-    color:  #ff0000;
-  }
-  
-  
-  .react-tabs__tab-panel {
-    padding: 20px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-top: none;
-    border-radius: 0 0 5px 5px;
-  }
-  
-  .react-tabs__tab-panel h2 {
-    color: #ff0000; /* Rojo */
-    margin-bottom: 10px;
-  }
-  
-  .react-tabs__tab-panel p {
-    margin: 10px 0;
-  }
-  
-  input[type="file"] {
-    margin-top: 10px;
-  }
-  
-  img {
-    margin-top: 10px;
-    
-    border-radius: 5px;
-    
-  }
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.App {
+  text-align: center;
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  max-width: 800px;
+}
+
+h1 {
+  color: #ff0000;
+  margin-bottom: 20px;
+}
+
+.react-tabs {
+  text-align: left;
+}
+
+.react-tabs__tab-list {
+  border-bottom: 2px solid #ff0000;
+  margin: 0 0 20px;
+  padding: 0;
+}
+
+.react-tabs__tab {
+  display: inline-block;
+  border: 1px solid transparent;
+  border-bottom: none;
+  bottom: -1px;
+  position: relative;
+  list-style: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  color: #333;
+  font-weight: bold;
+}
+
+.react-tabs__tab--selected {
+  background: #ff0000;
+  color: white;
+  border-radius: 5px 5px 0 0;
+}
+
+.react-tabs__tab:hover:not(.react-tabs__tab--selected) {
+  color: #ff0000;
+}
+
+h2 {
+  text-align: center;
+}
+
+img[alt="Logo Fagor"] {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 400px;
+}
+
+/* Estilos para la imagen con clase graficoEnPantalla */
+.graficoEnPantalla {
+  width: 300px; /* Tamaño razonable, ajusta según necesites */
+  height: auto; /* Mantiene proporciones */
+  display: block; /* Necesario para centrar con margin */
+  margin: 10px auto; /* Centra horizontalmente */
+  border-radius: 10px; /* Borde redondeado */
+}
+
+.react-tabs__tab-panel {
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+}
+
+.react-tabs__tab-panel h2 {
+  color: #ff0000;
+  margin-bottom: 10px;
+}
+
+.react-tabs__tab-panel p {
+  margin: 10px 0;
+}
+
+input[type="file"] {
+  margin-top: 10px;
+}
+
+img {
+  margin-top: 10px;
+  border-radius: 5px;
+}
+/* Estilos existentes */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.App {
+  text-align: center;
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  max-width: 800px;
+  margin: 20px auto;
+}
+
+/* ... resto de tus estilos para Tabs ... */
+
+/* ... Otros estilos existentes ... */
+
+/* Nuevos estilos para Login */
+.login-container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.login-container h2 {
+  color:black;
+  margin-bottom: 20px;
+}
+.login-container h2 {
+  color: red;
+  margin-bottom: 20px;
+}
+.login-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.login-container label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.login-container input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: #ffffff; /* Fondo blanco explícito */
+  color: #333; /* Texto oscuro para contraste */
+}
+
+.login-container input:focus {
+  outline: none; /* Elimina el borde de foco por defecto */
+  border-color: #ff0000; /* Borde rojo al enfocar */
+  background-color: #ffffff; /* Asegura que el fondo siga blanco al enfocar */
+}
+
+.login-container button {
+  padding: 10px;
+  width: 150px;
+  align-self: center;
+  background-color: #ff0000;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.login-container button:hover {
+  background-color: #cc0000;
+}

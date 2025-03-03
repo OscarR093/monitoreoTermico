@@ -57,7 +57,11 @@ def websocket_sender():
         if not shared.data_queue.empty():
             tag, data = shared.data_queue.get()
             try:
-                ws_manager.ws_app.send(f"{tag}:{data}")
+                mensaje= {
+                        "equipo": tag, 
+                        "temperatura": data
+                        }
+                ws_manager.ws_app.send(json.dumps(mensaje))
                 print(f"Datos enviados: {tag} - {data}")
             except Exception as e:
                 print(f"Error enviando datos: {e}")

@@ -1,9 +1,16 @@
 const express = require('express');
 const http = require('http');
-const { wss, getTemperatures, addTemperature } = require('./websocketServer');
+const { wss } = require('./websocketServer');
+const tempRoutes = require('./routes/temperatureRoutes');
+const userRoutes = require('./routes/userRoutes');
+require('dotenv').config(); // Cargar variables de entorno desde .env
 
 const app = express();
 app.use(express.json());
+
+// Integrar rutas de la API y usuarios
+app.use('/api/temp', tempRoutes);
+app.use('/api/users', userRoutes);
 
 const server = http.createServer(app);
 
@@ -12,18 +19,6 @@ server.on('upgrade', (request, socket, head) => {
     wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
     });
-});
-
-// Ruta HTTP para obtener temperaturas
-app.get('/temperaturas', (req, res) => {
-    res.json(getTemperatures());
-});
-
-// Ruta HTTP para agregar temperaturas
-app.post('/temperaturas', (req, res) => {
-    const { equipo, temperatura } = req.body;
-    addTemperature(equipo, temperatura);
-    res.status(201).send(`Temperatura agregada para ${equipo}`);
 });
 
 const PORT = process.env.PORT || 8080;
