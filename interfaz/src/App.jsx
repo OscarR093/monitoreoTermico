@@ -5,7 +5,7 @@ import Settings from "./components/Settings";
 import UserManagement from "./components/UserManagement"; // Nuevo componente
 import "./styles.css";
 import { useState, useEffect } from "react";
-import api from "../services/api";
+import api from "./services/api";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

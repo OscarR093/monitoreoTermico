@@ -4,9 +4,9 @@ import "react-tabs/style/react-tabs.css";
 import "./styles.css";
 import horno from "./assets/horno.gif";
 import logo from "./assets/fagorlogo.png";
-import useWebSocket from "../services/webSocketService";
+import useWebSocket from "./services/webSocketService";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+import api from "./services/api";
 
 const TabsComponent = ({ onLogout }) => {
   const navigate = useNavigate();

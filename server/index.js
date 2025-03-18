@@ -143,6 +143,14 @@ app.post('/protected', authenticateToken, (req, res) => {
   res.json({ message })
 })
 
+app.get('/api/env', (req, res) => {
+  const env = {
+    APP_ENV: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+    WS_HOST: process.env.NODE_ENV === 'production' ? req.headers.host : 'localhost:8080'
+  }
+  res.json(env)
+})
+
 // Ruta catch-all para el frontend (React Router)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'))
