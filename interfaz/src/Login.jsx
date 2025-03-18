@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from '../services/api';
 import "./styles.css";
 
 function Login({ setIsAuthenticated }) {
@@ -7,21 +8,26 @@ function Login({ setIsAuthenticated }) {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Simulación de autenticación (reemplaza con tu lógica real de backend)
-    if (username === "admin" && password === "1234") {
+    try {
+      const response = await api.post('/login', { username, password }); // Ya incluye /api por baseURL
       setIsAuthenticated(true);
-      navigate("/"); // Redirige a la página principal
-    } else {
-      alert("Credenciales incorrectas");
+      navigate("/");
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        alert("Usuario o contraseña incorrectos");
+      } else {
+        alert("Error en el servidor. Intenta de nuevo más tarde.");
+      }
+      console.error('Error al iniciar sesión:', error);
     }
   };
 
   return (
     <div className="login-container">
       <h2>Inicio de Sesión</h2>
-      <h3>Monitoreo Termico</h3>
+      <h3>Monitoreo Térmico</h3>
       <form onSubmit={handleLogin}>
         <div>
           <input

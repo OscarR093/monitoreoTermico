@@ -1,35 +1,61 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Tabs from "./Tabs";
-import Login from "./Login"; // Componente de login que crearemos
+import Login from "./Login";
 import "./styles.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from '../services/api';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Estado de autenticación
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Componente protegido para rutas autenticadas
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await api.get('/auth/check');
+        setIsAuthenticated(true);
+      } catch (error) {
+        setIsAuthenticated(false);
+        console.log(`ocurrio un error ${error}`)
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Función para cerrar sesión
+  const handleLogout = async () => {
+    try {
+      await api.post('/logout'); // Llama a la ruta de logout del backend
+      setIsAuthenticated(false); // Actualiza el estado
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
+
   const ProtectedRoute = ({ children }) => {
+    if (loading) return <div>Cargando...</div>;
     return isAuthenticated ? children : <Navigate to="/login" />;
   };
+
+  if (loading) return <div>Cargando...</div>;
 
   return (
     <Router>
       <Routes>
-        {/* Ruta para el login */}
         <Route
           path="/login"
           element={<Login setIsAuthenticated={setIsAuthenticated} />}
         />
-        {/* Ruta protegida para Tabs */}
         <Route
           path="/"
           element={
             <ProtectedRoute>
-              <Tabs />
+              <Tabs onLogout={handleLogout} /> {/* Pasamos handleLogout como prop */}
             </ProtectedRoute>
           }
         />
-        {/* Redirigir cualquier ruta desconocida al login o a la raíz */}
         <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
       </Routes>
     </Router>
