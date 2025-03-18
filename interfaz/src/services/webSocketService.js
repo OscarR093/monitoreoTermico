@@ -1,14 +1,32 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const useWebSocket = (setTabsData) => {
+  const [env, setEnv] = useState(null);
+
+  // Obtener variables de entorno desde el servidor
   useEffect(() => {
-    const isProduction = import.meta.env.VITE_APP_ENV === "production";
-    console.log("Valor de VITE_APP_ENV:", import.meta.env.VITE_APP_ENV);
+    fetch("/api/env")
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Variables de entorno recibidas:", data);
+        setEnv(data);
+      })
+      .catch((error) => {
+        console.error("Error al obtener variables de entorno:", error);
+        // Fallback a desarrollo si falla
+        setEnv({ APP_ENV: "development", WS_HOST: "localhost:8080" });
+      });
+  }, []);
+
+  // Configurar WebSocket cuando las variables estén disponibles
+  useEffect(() => {
+    if (!env) return; // Esperar hasta que env esté listo
+
+    const isProduction = env.APP_ENV === "production";
+    console.log("Valor de APP_ENV:", env.APP_ENV);
     console.log("¿Es producción?:", isProduction);
 
-    const wsUrl = isProduction
-      ? `wss://${window.location.host}`
-      : "ws://localhost:8080";
+    const wsUrl = isProduction ? `wss://${env.WS_HOST}` : "ws://localhost:8080";
 
     console.log("Intentando conectar al WebSocket en:", wsUrl);
 
@@ -51,7 +69,9 @@ const useWebSocket = (setTabsData) => {
       ws.removeEventListener("close", handleClose);
       ws.close();
     };
-  }, [setTabsData]);
+  }, [env, setTabsData]); // Dependencias ajustadas para incluir env
+
+  return null; // Mantengo el retorno como null para no alterar el uso
 };
 
 export default useWebSocket;
