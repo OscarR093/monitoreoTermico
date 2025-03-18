@@ -23,7 +23,8 @@ const TabsComponent = ({ onLogout }) => {
   ]);
   const [userData, setUserData] = useState(null);
 
-  useWebSocket("ws://localhost:8080", setTabsData); // Puerto ajustado a 8080
+  // Llamar a useWebSocket sin pasar URL, dejando que el servicio decida
+  useWebSocket(setTabsData);
 
   useEffect(() => {
     async function fetchUserData() {
@@ -48,7 +49,7 @@ const TabsComponent = ({ onLogout }) => {
   };
 
   const handleAdminClick = () => {
-    console.log(userData.admin)
+    console.log(userData.admin);
     navigate("/admin/users");
   };
 
