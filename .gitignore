@@ -8,7 +8,6 @@
 node_modules/
 
 # Compilación del frontend
-dist/
 build/
 
 # Logs
