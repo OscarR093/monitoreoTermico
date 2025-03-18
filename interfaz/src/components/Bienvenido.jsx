@@ -26,7 +26,7 @@ function Bienvenido() {
 
   return (
     <div>
-      <h3>Bienvenido, {userData?.username || "Usuario"}</h3>
+      <h3>Bienvenido, {userData?.fullName || "Usuario"}</h3>
     </div>
   );
 }

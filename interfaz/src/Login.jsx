@@ -3,46 +3,55 @@ import { useNavigate } from "react-router-dom";
 import api from '../services/api';
 import "./styles.css";
 
-function Login({ setIsAuthenticated }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+function Login({ setIsAuthenticated, setUser }) {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  });
+  const [error, setError] = useState(null);
 
-  const handleLogin = async (e) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('/login', { username, password }); // Ya incluye /api por baseURL
+      const response = await api.post("/login", formData);
+      setUser(response); // Establece user con los datos del backend
       setIsAuthenticated(true);
       navigate("/");
-    } catch (error) {
-      if (error.response && error.response.status === 401) {
-        alert("Usuario o contraseña incorrectos");
-      } else {
-        alert("Error en el servidor. Intenta de nuevo más tarde.");
-      }
-      console.error('Error al iniciar sesión:', error);
+    } catch (err) {
+      setError("Usuario o contraseña incorrectos");
+      console.error("Error al iniciar sesión:", err);
     }
   };
 
   return (
     <div className="login-container">
-      <h2>Inicio de Sesión</h2>
-      <h3>Monitoreo Térmico</h3>
-      <form onSubmit={handleLogin}>
+      <h2>Iniciar Sesión</h2>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
         <div>
+          <label>Usuario:</label>
           <input
             type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Usuario"
+            name="username"
+            value={formData.username}
+            onChange={handleInputChange}
+            required
           />
         </div>
         <div>
+          <label>Contraseña:</label>
           <input
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contraseña"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            required
           />
         </div>
         <button type="submit">Iniciar Sesión</button>
