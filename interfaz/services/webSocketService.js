@@ -2,13 +2,13 @@ import { useEffect } from "react";
 
 const useWebSocket = (setTabsData) => {
   useEffect(() => {
-    // Determinar si estamos en producción o desarrollo usando Vite
     const isProduction = import.meta.env.VITE_APP_ENV === "production";
-    
-    // Construir la URL del WebSocket
+    console.log("Valor de VITE_APP_ENV:", import.meta.env.VITE_APP_ENV);
+    console.log("¿Es producción?:", isProduction);
+
     const wsUrl = isProduction
-      ? `wss://${window.location.host}` // Render en producción
-      : "ws://localhost:8080"; // Localhost en desarrollo
+      ? `wss://${window.location.host}`
+      : "ws://localhost:8080";
 
     console.log("Intentando conectar al WebSocket en:", wsUrl);
 
@@ -20,13 +20,9 @@ const useWebSocket = (setTabsData) => {
     };
 
     const handleMessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log("Datos recibidos:", data);
-
-      const { equipo, temperatura } = data; // Extraer directamente del JSON
-      console.log(equipo);
+      console.log("Datos recibidos:", JSON.parse(event.data));
+      const { equipo, temperatura } = JSON.parse(event.data);
       if (equipo && temperatura !== undefined) {
-        console.log(temperatura);
         setTabsData((prevTabsData) =>
           prevTabsData.map((tab) =>
             tab.tag === equipo ? { ...tab, temperature: `${temperatura}°C` } : tab
@@ -39,8 +35,8 @@ const useWebSocket = (setTabsData) => {
       console.error("Error en la conexión WebSocket:", error);
     };
 
-    const handleClose = () => {
-      console.log("Desconectado del servidor WebSocket");
+    const handleClose = (event) => {
+      console.log("Desconectado del servidor WebSocket. Código:", event.code, "Razón:", event.reason);
     };
 
     ws.addEventListener("open", handleOpen);
