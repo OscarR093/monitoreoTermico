@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import "./styles.css";
 import horno from "./assets/horno.gif";
 import logo from "./assets/fagorlogo.png";
 import useWebSocket from "../services/webSocketService";
-import Bienvenido from "./components/Bienvenido";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 
-const TabsComponent = ({ onLogout }) => { // Recibimos onLogout como prop
-  const navigate = useNavigate(); // Para redirigir tras logout
+const TabsComponent = ({ onLogout }) => {
+  const navigate = useNavigate();
   const [tabsData, setTabsData] = useState([
     { id: 1, name: "Torre Fusora", temperature: "Conectando...", image: "", tag: "TF" },
     { id: 2, name: "Linea 1", temperature: "Conectando...", image: "", tag: "L1" },
@@ -21,23 +21,56 @@ const TabsComponent = ({ onLogout }) => { // Recibimos onLogout como prop
     { id: 8, name: "Ep 2", temperature: "Conectando...", image: "", tag: "EP2" },
     { id: 9, name: "Ep 3", temperature: "Conectando...", image: "", tag: "EP3" },
   ]);
+  const [userData, setUserData] = useState(null);
 
-  useWebSocket("ws://localhost:8080", setTabsData);
+  useWebSocket("ws://localhost:8080", setTabsData); // Puerto ajustado a 8080
 
-  // Función para manejar el cierre de sesión
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        const data = await api.get("/auth/check");
+        setUserData(data.user);
+      } catch (error) {
+        console.error("Error al cargar datos del usuario:", error);
+        navigate("/login");
+      }
+    }
+    fetchUserData();
+  }, [navigate]);
+
   const handleLogoutClick = async () => {
-    await onLogout(); // Llama a la función de logout pasada desde App
-    navigate("/login"); // Redirige a la página de login
+    await onLogout();
+    navigate("/login");
   };
+
+  const handleSettingsClick = () => {
+    navigate("/settings");
+  };
+
+  const handleAdminClick = () => {
+    console.log(userData.admin)
+    navigate("/admin/users");
+  };
+
+  if (!userData) return <div>Cargando...</div>;
 
   return (
     <Tabs>
       <img src={logo} alt="Logo Fagor" />
       <h2>Monitoreo Térmico</h2>
-      <Bienvenido/>
+      <h3>Bienvenido, {userData.fullName}</h3>
       <button onClick={handleLogoutClick} className="logout-button">
         Cerrar Sesión
       </button>
+      <button onClick={handleSettingsClick} className="settings-button">
+        Ajustes
+      </button>
+      {userData.admin && (
+        <button onClick={handleAdminClick} className="admin-button">
+          Gestión de Usuarios
+        </button>
+      )}
+
       <TabList>
         {tabsData.map((tab) => (
           <Tab key={tab.id}>{tab.name}</Tab>
@@ -48,11 +81,7 @@ const TabsComponent = ({ onLogout }) => { // Recibimos onLogout como prop
         <TabPanel key={tab.id} style={{ textAlign: "center" }}>
           <h2>{tab.name}</h2>
           <b style={{ fontSize: "30px" }}>Temperatura: {tab.temperature}</b>
-          <img
-            src={horno}
-            alt={`Imagen de ${tab.name}`}
-            className="graficoEnPantalla"
-          />
+          <img src={horno} alt={`Imagen de ${tab.name}`} className="graficoEnPantalla" />
         </TabPanel>
       ))}
     </Tabs>

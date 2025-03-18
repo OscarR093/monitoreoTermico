@@ -1,42 +1,51 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Tabs from "./Tabs";
+import Tabs from "./Tabs"; // Ajusta el nombre si es diferente
 import Login from "./Login";
+import Settings from "./components/Settings";
+import UserManagement from "./components/UserManagement"; // Nuevo componente
 import "./styles.css";
 import { useState, useEffect } from "react";
-import api from '../services/api';
+import api from "../services/api";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    async function checkAuth() {
       try {
-        await api.get('/auth/check');
+        const response = await api.get("/auth/check");
+        setUser(response);
         setIsAuthenticated(true);
       } catch (error) {
+        // El 401 es manejado por el interceptor, no hacemos nada aquí
         setIsAuthenticated(false);
-        console.log(`ocurrio un error ${error}`)
+        setUser(null);
       } finally {
         setLoading(false);
       }
-    };
+    }
     checkAuth();
   }, []);
 
-  // Función para cerrar sesión
   const handleLogout = async () => {
     try {
-      await api.post('/logout'); // Llama a la ruta de logout del backend
-      setIsAuthenticated(false); // Actualiza el estado
+      await api.post("/logout");
+      setIsAuthenticated(false);
+      setUser(null);
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error("Error al cerrar sesión:", error);
     }
   };
 
-  const ProtectedRoute = ({ children }) => {
+  const ProtectedRoute = ({ children, adminOnly = false }) => {
     if (loading) return <div>Cargando...</div>;
-    return isAuthenticated ? children : <Navigate to="/login" />;
+    if (!isAuthenticated) return <Navigate to="/login" />;
+    if (adminOnly && !user?.admin) {
+      return <Navigate to="/" />;
+    }
+    return children;
   };
 
   if (loading) return <div>Cargando...</div>;
@@ -46,13 +55,29 @@ function App() {
       <Routes>
         <Route
           path="/login"
-          element={<Login setIsAuthenticated={setIsAuthenticated} />}
+          element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />}
         />
         <Route
           path="/"
           element={
             <ProtectedRoute>
-              <Tabs onLogout={handleLogout} /> {/* Pasamos handleLogout como prop */}
+              <Tabs onLogout={handleLogout} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings onLogout={handleLogout} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <UserManagement />
             </ProtectedRoute>
           }
         />
