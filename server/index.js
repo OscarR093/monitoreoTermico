@@ -151,4 +151,5 @@ app.get('*', (req, res) => {
 // Iniciar el servidor en el puerto asignado por Render
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
+  console.log('WebSocket listo para conexiones en wss://', server.address())
 })

@@ -7,4 +7,4 @@ equipos = [
     {"ip": "192.168.0.50", "port": 80, "nombre": "Linea 7", "tag":"L7"},
     # Agrega más equipos aquí
 ]
-websocket_url = "ws://localhost:8080"
+websocket_url = "wss://monitoreotermico.onrender.com/"
