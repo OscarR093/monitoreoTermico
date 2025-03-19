@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
-import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
+import { useState } from "react";
+import { Tab, Tabs as ReactTabs, TabList, TabPanel } from "react-tabs"; // Renombramos Tabs importado
 import "react-tabs/style/react-tabs.css";
 import "./styles.css";
 import horno from "./assets/horno.gif";
+import torre from "./assets/torreFusora.png"
 import logo from "./assets/fagorlogo.png";
 import useWebSocket from "./services/webSocketService";
 import { useNavigate } from "react-router-dom";
-import api from "./services/api";
 
-const TabsComponent = ({ onLogout }) => {
+const TabsComponent = ({ onLogout, user }) => { // Cambiamos Tabs a TabsComponent
   const navigate = useNavigate();
   const [tabsData, setTabsData] = useState([
     { id: 1, name: "Torre Fusora", temperature: "Conectando...", image: "", tag: "TF" },
@@ -21,72 +21,87 @@ const TabsComponent = ({ onLogout }) => {
     { id: 8, name: "Ep 2", temperature: "Conectando...", image: "", tag: "EP2" },
     { id: 9, name: "Ep 3", temperature: "Conectando...", image: "", tag: "EP3" },
   ]);
-  const [userData, setUserData] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [tabsOpen, setTabsOpen] = useState(false);
 
-  // Llamar a useWebSocket sin pasar URL, dejando que el servicio decida
   useWebSocket(setTabsData);
-
-  useEffect(() => {
-    async function fetchUserData() {
-      try {
-        const data = await api.get("/auth/check");
-        setUserData(data.user);
-      } catch (error) {
-        console.error("Error al cargar datos del usuario:", error);
-        navigate("/login");
-      }
-    }
-    fetchUserData();
-  }, [navigate]);
 
   const handleLogoutClick = async () => {
     await onLogout();
     navigate("/login");
+    setMenuOpen(false);
   };
 
   const handleSettingsClick = () => {
     navigate("/settings");
+    setMenuOpen(false);
   };
 
   const handleAdminClick = () => {
-    console.log(userData.admin);
     navigate("/admin/users");
+    setMenuOpen(false);
   };
 
-  if (!userData) return <div>Cargando...</div>;
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+    setTabsOpen(false);
+  };
+
+  const toggleTabs = () => {
+    setTabsOpen(!tabsOpen);
+    setMenuOpen(false);
+  };
+
+  const handleTabSelect = () => {
+    setTabsOpen(false);
+  };
+
+  if (!user) return null; // ProtectedRoute maneja la redirección
 
   return (
-    <Tabs>
-      <img src={logo} alt="Logo Fagor" />
-      <h2>Monitoreo Térmico</h2>
-      <h3>Bienvenido, {userData.fullName}</h3>
-      <button onClick={handleLogoutClick} className="logout-button">
-        Cerrar Sesión
-      </button>
-      <button onClick={handleSettingsClick} className="settings-button">
-        Ajustes
-      </button>
-      {userData.admin && (
-        <button onClick={handleAdminClick} className="admin-button">
-          Gestión de Usuarios
+    <div className="tabs-wrapper">
+      <div className="header">
+        <img src={logo} alt="Logo Fagor" className="logo" />
+        <h1>Monitoreo Térmico</h1>
+        <h3>Bienvenido, {user.fullName}</h3>
+        <button className="menu-toggle" onClick={toggleMenu}>
+          ☰
         </button>
-      )}
+        <div className={`button-group ${menuOpen ? "open" : ""}`}>
+          <button onClick={handleSettingsClick} className="settings-button">
+            Ajustes
+          </button>
+          {user.admin && (
+            <button onClick={handleAdminClick} className="admin-button">
+              Gestión de Usuarios
+            </button>
+          )}
+          <button onClick={handleLogoutClick} className="logout-button">
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
 
-      <TabList>
+      <button className="tabs-toggle" onClick={toggleTabs}>
+        ☰ Pestañas
+      </button>
+      <ReactTabs className="react-tabs" onSelect={handleTabSelect}> {/* Usamos ReactTabs */}
+        <TabList className={`react-tabs__tab-list ${tabsOpen ? "open" : ""}`}>
+          {tabsData.map((tab) => (
+            <Tab key={tab.id}>{tab.name}</Tab>
+          ))}
+        </TabList>
+
         {tabsData.map((tab) => (
-          <Tab key={tab.id}>{tab.name}</Tab>
+          <TabPanel key={tab.id} className="react-tabs__tab-panel">
+            <h2>{tab.name}</h2>
+            <b className="temperature">Temperatura: {tab.temperature}</b>
+            <img src={tab.name ==="Torre Fusora"? torre :horno} alt={`Imagen de ${tab.name}`} className="graficoEnPantalla" />
+          </TabPanel>
         ))}
-      </TabList>
-
-      {tabsData.map((tab) => (
-        <TabPanel key={tab.id} style={{ textAlign: "center" }}>
-          <h2>{tab.name}</h2>
-          <b style={{ fontSize: "30px" }}>Temperatura: {tab.temperature}</b>
-          <img src={horno} alt={`Imagen de ${tab.name}`} className="graficoEnPantalla" />
-        </TabPanel>
-      ))}
-    </Tabs>
+      </ReactTabs>
+    </div>
   );
 };
 
-export default TabsComponent;
+export default TabsComponent; // Exportamos como TabsComponent

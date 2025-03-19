@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Tabs from "./Tabs"; // Ajusta el nombre si es diferente
+import TabsComponent from "./Tabs";
 import Login from "./Login";
 import Settings from "./components/Settings";
-import UserManagement from "./components/UserManagement"; // Nuevo componente
+import UserManagement from "./components/UserManagement";
 import "./styles.css";
 import { useState, useEffect } from "react";
 import api from "./services/api";
@@ -15,11 +15,10 @@ function App() {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const response = await api.get("/auth/check");
-        setUser(response);
+        const response = await api.get("/auth/check"); // Usa api.get que devuelve solo data
+        setUser(response.user || response); // Ajusta según la estructura del backend
         setIsAuthenticated(true);
       } catch (error) {
-        // El 401 es manejado por el interceptor, no hacemos nada aquí
         setIsAuthenticated(false);
         setUser(null);
       } finally {
@@ -40,15 +39,18 @@ function App() {
   };
 
   const ProtectedRoute = ({ children, adminOnly = false }) => {
-    if (loading) return <div>Cargando...</div>;
-    if (!isAuthenticated) return <Navigate to="/login" />;
+    if (loading) return <div className="loading">Cargando...</div>;
+    if (!isAuthenticated) {
+      console.log("Not authenticated, redirecting to /login");
+      return <Navigate to="/login" />;
+    }
     if (adminOnly && !user?.admin) {
       return <Navigate to="/" />;
     }
     return children;
   };
 
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <div className="loading">Cargando...</div>;
 
   return (
     <Router>
@@ -61,7 +63,7 @@ function App() {
           path="/"
           element={
             <ProtectedRoute>
-              <Tabs onLogout={handleLogout} />
+              <TabsComponent onLogout={handleLogout} user={user} />
             </ProtectedRoute>
           }
         />
@@ -69,7 +71,7 @@ function App() {
           path="/settings"
           element={
             <ProtectedRoute>
-              <Settings onLogout={handleLogout} />
+              <Settings onLogout={handleLogout} user={user} />
             </ProtectedRoute>
           }
         />
@@ -77,7 +79,7 @@ function App() {
           path="/admin/users"
           element={
             <ProtectedRoute adminOnly={true}>
-              <UserManagement />
+              <UserManagement user={user} />
             </ProtectedRoute>
           }
         />
