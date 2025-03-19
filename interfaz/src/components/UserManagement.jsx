@@ -57,7 +57,7 @@ function UserManagement({ user }) {
   const handleDeleteUser = async (id, username) => {
     if (window.confirm(`¿Estás seguro de que quieres eliminar al usuario "${username}"?`)) {
       try {
-        await api.delete(`/users/${id}`);
+        await api.del(`/users/${id}`);
         setUsers(users.filter((user) => user.id !== id));
         alert("Usuario eliminado correctamente");
       } catch (error) {
