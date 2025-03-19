@@ -8,7 +8,6 @@ const useWebSocket = (setTabsData) => {
     fetch("/api/env")
       .then((response) => response.json())
       .then((data) => {
-        console.log("Variables de entorno recibidas:", data);
         setEnv(data);
       })
       .catch((error) => {
@@ -23,12 +22,9 @@ const useWebSocket = (setTabsData) => {
     if (!env) return; // Esperar hasta que env esté listo
 
     const isProduction = env.APP_ENV === "production";
-    console.log("Valor de APP_ENV:", env.APP_ENV);
-    console.log("¿Es producción?:", isProduction);
 
     const wsUrl = isProduction ? `wss://${env.WS_HOST}` : "ws://localhost:8080";
 
-    console.log("Intentando conectar al WebSocket en:", wsUrl);
 
     const ws = new WebSocket(wsUrl);
 
@@ -38,7 +34,6 @@ const useWebSocket = (setTabsData) => {
     };
 
     const handleMessage = (event) => {
-      console.log("Datos recibidos:", JSON.parse(event.data));
       const { equipo, temperatura } = JSON.parse(event.data);
       if (equipo && temperatura !== undefined) {
         setTabsData((prevTabsData) =>

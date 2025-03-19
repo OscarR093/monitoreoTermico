@@ -23,7 +23,7 @@ body {
 
 /* Estilos para títulos */
 h1 {
-  color: #ff0000;
+  color: black;
   margin-bottom: 20px;
 }
 
@@ -39,17 +39,79 @@ h3 {
 }
 
 /* Estilos para TabsComponent */
-.react-tabs {
-  text-align: left;
+.tabs-wrapper {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 90%;
   max-width: 1200px;
   margin: 20px auto;
-  padding: 20px;
+  position: relative; /* Para z-index de menús */
+}
+
+.header {
+  padding-bottom: 20px;
+  border-bottom: 2px solid #ff0000;
+  margin-bottom: 20px;
+  text-align: center;
+  position: relative;
+}
+
+.header .logo {
+  display: block;
+  margin: 0 auto 20px;
+  width: 400px;
+  height: auto;
+}
+
+.menu-toggle {
+  display: none; /* Oculto en pantallas grandes */
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #ff0000;
+  cursor: pointer;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.button-group.open {
+  display: flex;
+}
+
+.tabs-toggle {
+  display: none; /* Oculto en pantallas grandes */
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #ff0000;
+  cursor: pointer;
+  padding: 10px;
+  width: 100%;
+  text-align: left;
+}
+
+.react-tabs {
+  text-align: left;
 }
 
 .react-tabs__tab-list {
   border-bottom: 2px solid #ff0000;
   margin: 0 0 20px;
   padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .react-tabs__tab {
@@ -63,6 +125,7 @@ h3 {
   cursor: pointer;
   color: #333;
   font-weight: bold;
+  border-radius: 5px 5px 0 0;
 }
 
 .react-tabs__tab--selected {
@@ -81,10 +144,18 @@ h3 {
   border: 1px solid #ddd;
   border-top: none;
   border-radius: 0 0 5px 5px;
+  text-align: center;
 }
 
 .react-tabs__tab-panel p {
   margin: 10px 0;
+}
+
+.temperature {
+  display: block;
+  font-size: 30px;
+  color: black;
+  margin: 20px 0;
 }
 
 .graficoEnPantalla {
@@ -93,14 +164,6 @@ h3 {
   display: block;
   margin: 10px auto;
   border-radius: 10px;
-}
-
-img[alt="Logo Fagor"] {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 400px;
-  margin-bottom: 20px;
 }
 
 /* Estilos para Login */
@@ -115,7 +178,7 @@ img[alt="Logo Fagor"] {
 }
 
 .login-container h2 {
-  color: #ff0000; /* Usamos rojo consistente con tu tema */
+  color: #ff0000;
   margin-bottom: 20px;
 }
 
@@ -167,14 +230,15 @@ img[alt="Logo Fagor"] {
 .admin-button,
 .delete-button,
 .back-button {
-  margin: 10px;
-  padding: 8px 16px;
-  background-color: #ff0000; /* Alineado con tu tema rojo */
+  margin: 0;
+  padding: 10px 20px;
+  background-color: #ff0000;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
+  transition: background-color 0.3s;
 }
 
 .logout-button:hover,
@@ -185,7 +249,7 @@ img[alt="Logo Fagor"] {
 }
 
 .delete-button {
-  background-color: #dc3545; /* Un rojo más oscuro para diferenciar */
+  background-color: #dc3545;
 }
 
 .delete-button:hover {
@@ -193,7 +257,7 @@ img[alt="Logo Fagor"] {
 }
 
 .back-button {
-  background-color: #6c757d; /* Gris para el botón "Volver" */
+  background-color: #6c757d;
 }
 
 .back-button:hover {
@@ -263,6 +327,7 @@ img {
   margin-top: 10px;
   border-radius: 5px;
 }
+
 /* Estilos para UserManagement */
 .user-list {
   margin: 20px 0;
@@ -295,5 +360,123 @@ img {
 }
 
 .user-list button {
-  margin: 0; /* Ajusta el margen para que esté en línea */
+  margin: 0;
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  font-size: 20px;
+  padding: 50px;
+  color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tabs-wrapper {
+    width: 95%;
+  }
+
+  .header {
+    padding-bottom: 15px;
+  }
+
+  .header .logo {
+    width: 300px;
+  }
+
+  .menu-toggle {
+    display: block; /* Mostrar botón hamburguesa para botones */
+  }
+
+  .button-group {
+    display: none; /* Ocultar botones por defecto */
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    background-color: white;
+    width: 200px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+
+  .button-group.open {
+    display: flex;
+  }
+
+  .logout-button,
+  .settings-button,
+  .admin-button {
+    width: 100%;
+    max-width: none;
+  }
+
+  .tabs-toggle {
+    display: block; /* Mostrar botón hamburguesa para pestañas */
+  }
+
+  .react-tabs__tab-list {
+    display: none; /* Ocultar pestañas por defecto */
+  }
+
+  .react-tabs__tab-list.open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 70px; /* Debajo del botón tabs-toggle */
+    left: 20px;
+    width: calc(100% - 40px); /* Ancho completo menos márgenes */
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+
+  .react-tabs__tab {
+    width: 100%;
+    text-align: center;
+    border-radius: 0;
+    margin-bottom: 5px;
+  }
+
+  .graficoEnPantalla {
+    width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header .logo {
+    width: 200px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  .temperature {
+    font-size: 24px;
+  }
+
+  .graficoEnPantalla {
+    width: 150px;
+  }
+
+  .button-group {
+    width: 150px;
+  }
+
+  .react-tabs__tab-list.open {
+    width: calc(100% - 40px);
+  }
 }
