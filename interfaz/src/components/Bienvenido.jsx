@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
-import api from '../../services/api'; // Ajusta la ruta según tu estructura
+import api from '../../services/api';
 
 function Bienvenido() {
-  const [userData, setUserData] = useState(null); // Estado para los datos del usuario
-  const [loading, setLoading] = useState(true); // Estado de carga
-  const [error, setError] = useState(null); // Estado para errores
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function fetchUserData() {
       try {
         const response = await api.get('/auth/check');
-        setUserData(response.user); // Guardamos los datos del usuario (id, username)
+        setUserData(response.user);
       } catch (err) {
         setError('No se pudo cargar la información del usuario');
         console.error('Error al obtener userData:', err);
@@ -19,14 +19,14 @@ function Bienvenido() {
       }
     }
     fetchUserData();
-  }, []); // Array vacío para que se ejecute solo al montar el componente
+  }, []);
 
-  if (loading) return <div>Cargando...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading) return <div className="text-center text-2xl p-12 text-gray-600">Cargando...</div>;
+  if (error) return <div className="text-center text-2xl p-12 text-red-600">{error}</div>;
 
   return (
     <div>
-      <h3>Bienvenido, {userData?.fullName || "Usuario"}</h3>
+      <h3 className="text-lg font-semibold text-gray-700">Bienvenido, {userData?.fullName || "Usuario"}</h3>
     </div>
   );
 }

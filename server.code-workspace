@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "server"
+		},
+		{
+			"path": "interfaz"
+		},
+		{
+			"path": "ClientePython-Plc"
+		},
+		{
+			"path": "cliente"
+		}
+	],
+	"settings": {}
+}

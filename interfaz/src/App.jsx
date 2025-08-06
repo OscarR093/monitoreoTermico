@@ -3,7 +3,8 @@ import TabsComponent from "./Tabs";
 import Login from "./Login";
 import Settings from "./components/Settings";
 import UserManagement from "./components/UserManagement";
-import "./styles.css";
+// Elimina esta línea: import "./styles.css";
+import "./index.css"
 import { useState, useEffect } from "react";
 import api from "./services/api";
 
@@ -15,8 +16,8 @@ function App() {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const response = await api.get("/auth/check"); // Usa api.get que devuelve solo data
-        setUser(response.user || response); // Ajusta según la estructura del backend
+        const response = await api.get("/auth/check");
+        setUser(response.user || response);
         setIsAuthenticated(true);
       } catch (error) {
         setIsAuthenticated(false);
@@ -39,9 +40,8 @@ function App() {
   };
 
   const ProtectedRoute = ({ children, adminOnly = false }) => {
-    if (loading) return <div className="loading">Cargando...</div>;
+    if (loading) return <div className="text-center text-2xl p-12 text-gray-600">Cargando...</div>;
     if (!isAuthenticated) {
-      console.log("Not authenticated, redirecting to /login");
       return <Navigate to="/login" />;
     }
     if (adminOnly && !user?.admin) {
@@ -50,7 +50,7 @@ function App() {
     return children;
   };
 
-  if (loading) return <div className="loading">Cargando...</div>;
+  if (loading) return <div className="text-center text-2xl p-12 text-gray-600">Cargando...</div>;
 
   return (
     <Router>

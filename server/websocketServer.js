@@ -5,7 +5,10 @@ const wss = new WebSocketServer({ noServer: true })
 
 let pythonClient = null // Referencia al cliente Python
 const reactClients = new Set() // Conjunto de clientes React conectados
-const temperatures = {} // Objeto para almacenar temperaturas (lo añadí porque lo usas en getTemperatures/addTemperature)
+
+// Objeto para almacenar la última instantánea de temperaturas y estados de los termopares
+// Inicialmente vacío, se llenará con los datos del Python client
+const currentThermopileData = {}
 
 wss.on('connection', function connection (ws) {
   console.log('Cliente conectado')
@@ -13,6 +16,7 @@ wss.on('connection', function connection (ws) {
   ws.on('message', function incoming (message) {
     const newMessage = message.toString('utf-8') // Convertir el mensaje a string
 
+    // Identificación de clientes
     if (newMessage === 'python-client') {
       console.log('Cliente Python conectado')
       pythonClient = ws // Guardar referencia al cliente Python
@@ -24,33 +28,87 @@ wss.on('connection', function connection (ws) {
       reactClients.add(ws) // Añadir referencia al cliente React
 
       // Notificar al cliente Python que inicie el envío de datos
+      // ¡Importante! También envía los datos actuales si ya están disponibles.
       if (pythonClient && pythonClient.readyState === WebSocket.OPEN) {
         pythonClient.send(JSON.stringify({ action: 'start' }))
         console.log('Solicitud de inicio enviada al cliente Python.')
+
+        // Si ya tenemos datos del PLC, envíaselos inmediatamente al nuevo React client
+        if (Object.keys(currentThermopileData).length > 0) {
+          console.log('Enviando datos actuales a nuevo cliente React:', currentThermopileData)
+          ws.send(JSON.stringify({ type: 'temperatures', data: Object.values(currentThermopileData) }))
+        } else {
+          // Podrías enviar un mensaje indicando que los datos aún no están disponibles
+          ws.send(JSON.stringify({ type: 'status', message: 'Esperando datos del PLC...' }))
+        }
+      } else {
+        // Si no hay cliente Python conectado, notifica al cliente React
+        ws.send(JSON.stringify({ type: 'status', message: 'Cliente Python PLC no conectado. No hay datos disponibles.' }))
       }
       return
     }
 
     // Si el mensaje proviene del cliente Python
     if (ws === pythonClient) {
-      console.log('Mensaje recibido del cliente Python:', newMessage)
-      let messageToSend
+      // console.log('Mensaje recibido del cliente Python (raw):', newMessage) // Descomentar para depurar el mensaje crudo
 
-      // Intentar parsear newMessage como JSON, si falla, tratarlo como string
+      let parsedMessage
       try {
-        messageToSend = JSON.parse(newMessage) // Si es JSON válido, lo convierte en objeto
+        parsedMessage = JSON.parse(newMessage) // Parsear el JSON enviado por Python
       } catch (error) {
-        // Si no es JSON, envolverlo en un objeto
-        messageToSend = { message: newMessage }
+        console.error('Error al parsear JSON del cliente Python:', error.message)
+        // Si no es JSON válido, no podemos procesarlo como esperado.
+        // Podrías enviar un error a los clientes React o simplemente ignorarlo.
+        return
       }
 
-      // Reenviar el mensaje a todos los clientes React conectados
-      reactClients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          console.log('Enviando a React:', JSON.stringify(messageToSend))
-          client.send(JSON.stringify(messageToSend))
+      // --- AQUÍ ES DONDE PROCESAMOS EL JSON CONSOLIDADO ---
+      if (parsedMessage.type === 'temperatures' && Array.isArray(parsedMessage.data)) {
+        console.log('Datos de temperaturas consolidados recibidos de Python.')
+
+        // Actualizar el estado local `currentThermopileData` con los nuevos datos
+        // Usamos el `termopar` como clave para un acceso más fácil
+        parsedMessage.data.forEach(tp => {
+          currentThermopileData[`Termopar_${tp.termopar}`] = tp
+        })
+
+        // Reenviar el mensaje completo (tal cual) a todos los clientes React conectados
+        reactClients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            // console.log('Reenviando datos de temperaturas a React:', JSON.stringify(parsedMessage)) // Descomentar para depurar
+            client.send(JSON.stringify(parsedMessage))
+          }
+        })
+      } else if (parsedMessage.type === 'status' && typeof parsedMessage.message === 'string') {
+        console.log(`Mensaje de estado de Python: ${parsedMessage.message}`)
+
+        // Si el PLC se desconecta, podrías querer "limpiar" los datos actuales
+        // o actualizar el estado de cada termopar a "desconectado"
+        if (parsedMessage.message === 'PLC no conectado') {
+          Object.keys(currentThermopileData).forEach(key => {
+            currentThermopileData[key].estado = 'desconectado'
+            currentThermopileData[key].temperatura = null
+          })
+          console.log('Estado de todos los termopares actualizado a "desconectado" debido a PLC global.')
+          // Opcional: Podrías querer enviar un paquete de temperaturas con todos los estados en 'desconectado'
+          // en lugar de solo el mensaje de status.
         }
-      })
+
+        // Reenviar el mensaje de estado a todos los clientes React
+        reactClients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(parsedMessage))
+          }
+        })
+      } else {
+        console.log('Mensaje de Python con formato desconocido:', parsedMessage)
+        // Si es otro tipo de mensaje de Python no esperado, reenviarlo como está o manejarlo.
+        reactClients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(parsedMessage))
+          }
+        })
+      }
     }
   })
 
@@ -58,6 +116,20 @@ wss.on('connection', function connection (ws) {
     if (ws === pythonClient) {
       console.log('Cliente Python desconectado')
       pythonClient = null
+
+      // Cuando el Python client se desconecta, actualiza los datos en el servidor
+      // y notifica a los clientes React que los datos ya no están disponibles.
+      Object.keys(currentThermopileData).forEach(key => {
+        currentThermopileData[key].estado = 'desconectado'
+        currentThermopileData[key].temperatura = null
+      })
+      reactClients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ type: 'status', message: 'Cliente Python PLC desconectado. Datos no disponibles.' }))
+          // También podrías enviar el último paquete de temperaturas con todos los estados en "desconectado"
+          client.send(JSON.stringify({ type: 'temperatures', data: Object.values(currentThermopileData) }))
+        }
+      })
     } else {
       console.log('Cliente React desconectado')
       reactClients.delete(ws)
@@ -75,9 +147,12 @@ wss.on('connection', function connection (ws) {
   })
 })
 
-const getTemperatures = () => temperatures
-const addTemperature = (equipo, temperatura) => {
-  temperatures[equipo] = temperatura
-}
+// Función para obtener los últimos datos de temperaturas (si se necesitan en otras partes de tu app Node.js)
+const getTemperatures = () => Object.values(currentThermopileData)
 
-export { wss, getTemperatures, addTemperature }
+// No necesitamos addTemperature aquí ya que los datos vienen del Python client
+// const addTemperature = (equipo, temperatura) => {
+//   temperatures[equipo] = temperatura
+// }
+
+export { wss, getTemperatures }

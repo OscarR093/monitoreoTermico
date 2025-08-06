@@ -1,107 +1,190 @@
-import { useState } from "react";
-import { Tab, Tabs as ReactTabs, TabList, TabPanel } from "react-tabs"; // Renombramos Tabs importado
-import "react-tabs/style/react-tabs.css";
-import "./styles.css";
-import horno from "./assets/horno.gif";
-import torre from "./assets/torreFusora.png"
-import logo from "./assets/fagorlogo.png";
-import useWebSocket from "./services/webSocketService";
+// src/components/TabsComponent.jsx
+import { useState, useEffect } from "react";
+import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import { useNavigate } from "react-router-dom";
 
-const TabsComponent = ({ onLogout, user }) => { // Cambiamos Tabs a TabsComponent
+// Importa tus assets como lo hacías antes
+import horno from "./assets/horno.gif";
+import torre from "./assets/torreFusora.png";
+import logo from "./assets/fagorlogo.png";
+import useWebSocket from "./services/webSocketService";
+
+// --- Iconos SVG ---
+const MenuIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+  </svg>
+);
+
+const TabsComponent = ({ onLogout, user }) => {
   const navigate = useNavigate();
-  const [tabsData, setTabsData] = useState([
-    { id: 1, name: "Torre Fusora", temperature: "Conectando...", image: "", tag: "TF" },
-    { id: 2, name: "Linea 1", temperature: "Conectando...", image: "", tag: "L1" },
-    { id: 3, name: "Linea 2", temperature: "Conectando...", image: "", tag: "L2" },
-    { id: 4, name: "Linea 3", temperature: "Conectando...", image: "", tag: "L3" },
-    { id: 5, name: "Linea 4", temperature: "Conectando...", image: "", tag: "L4" },
-    { id: 6, name: "Linea 7", temperature: "Conectando...", image: "", tag: "L7" },
-    { id: 7, name: "Ep 1", temperature: "Conectando...", image: "", tag: "EP1" },
-    { id: 8, name: "Ep 2", temperature: "Conectando...", image: "", tag: "EP2" },
-    { id: 9, name: "Ep 3", temperature: "Conectando...", image: "", tag: "EP3" },
-  ]);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [tabsOpen, setTabsOpen] = useState(false);
+  const [tabsData, setTabsData] = useState([]);
+  const [plcStatus, setPlcStatus] = useState('Inicializando...');
+  
+  // Estados para controlar los menús desplegables y el tab seleccionado
+  const [mainMenuOpen, setMainMenuOpen] = useState(false);
+  const [tabsMenuOpen, setTabsMenuOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  
+  const isPlcConnected = plcStatus.toLowerCase() === 'ok' || plcStatus.toLowerCase().includes('recibidos');
 
-  useWebSocket(setTabsData);
+  useEffect(() => {
+    const initialTabs = [
+      { id: 1, name: "Torre Fusora", temperature: "---", image: torre },
+      { id: 2, name: "Linea 1", temperature: "---", image: horno },
+      { id: 3, name: "Linea 2", temperature: "---", image: horno },
+      { id: 4, name: "Linea 3", temperature: "---", image: horno },
+      { id: 5, name: "Linea 4", temperature: "---", image: horno },
+      { id: 6, name: "Linea 7", temperature: "---", image: horno },
+      { id: 7, name: "Estacion 1", temperature: "---", image: horno },
+      { id: 8, name: "Estacion 2", temperature: "---", image: horno },
+    ];
+    setTabsData(initialTabs);
+  }, []);
 
-  const handleLogoutClick = async () => {
-    await onLogout();
-    navigate("/login");
-    setMenuOpen(false);
+  useWebSocket(setTabsData, setPlcStatus);
+
+  const toggleMainMenu = () => setMainMenuOpen(!mainMenuOpen);
+  const toggleTabsMenu = () => setTabsMenuOpen(!tabsMenuOpen);
+
+  const handleNavigate = (path) => {
+    navigate(path);
+    setMainMenuOpen(false);
   };
 
-  const handleSettingsClick = () => {
-    navigate("/settings");
-    setMenuOpen(false);
+  const handleLogoutClick = () => {
+    onLogout();
+    setMainMenuOpen(false);
   };
 
-  const handleAdminClick = () => {
-    navigate("/admin/users");
-    setMenuOpen(false);
+  // Maneja la selección de una pestaña desde cualquier lugar (menú móvil o lista de escritorio)
+  const handleTabSelection = (index) => {
+    setSelectedIndex(index);
+    if (tabsMenuOpen) {
+      setTabsMenuOpen(false);
+    }
   };
-
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-    setTabsOpen(false);
-  };
-
-  const toggleTabs = () => {
-    setTabsOpen(!tabsOpen);
-    setMenuOpen(false);
-  };
-
-  const handleTabSelect = () => {
-    setTabsOpen(false);
-  };
-
-  if (!user) return null; // ProtectedRoute maneja la redirección
 
   return (
-    <div className="tabs-wrapper">
-      <div className="header">
-        <img src={logo} alt="Logo Fagor" className="logo" />
-        <h1>Monitoreo Térmico</h1>
-        <h3>Bienvenido, {user.fullName}</h3>
-        <button className="menu-toggle" onClick={toggleMenu}>
-          ☰
-        </button>
-        <div className={`button-group ${menuOpen ? "open" : ""}`}>
-          <button onClick={handleSettingsClick} className="settings-button">
-            Ajustes
+    <div className="flex flex-col h-screen font-sans bg-gray-100 text-gray-800">
+      {/* ================= HEADER ================= */}
+      <header className="bg-white p-4 shadow-md flex justify-between items-center fixed top-0 left-0 w-full z-30">
+        {/* --- Lado Izquierdo: Menú Tabs (móvil) y Logo/Estado (móvil) --- */}
+        <div className="flex items-center gap-2">
+          <button onClick={toggleTabsMenu} className="text-gray-600 focus:outline-none md:hidden p-2">
+            <MenuIcon />
           </button>
-          {user.admin && (
-            <button onClick={handleAdminClick} className="admin-button">
-              Gestión de Usuarios
+          {/* **AJUSTE:** Contenedor para el logo y el estado en móvil */}
+          <div className="flex flex-col items-start">
+              <img src={logo} alt="Logo Fagor" className="h-10 w-auto mr-20" />
+              {/* Estado del PLC (Solo visible en móvil, debajo del logo) */}
+              <span className={`-mt-1 ml-1 px-2 py-0.5 rounded-full text-white font-semibold text-[10px] transition-colors sm:hidden ${isPlcConnected ? 'bg-red-600' : 'bg-gray-700'}`}>
+                {isPlcConnected ? 'Conectado' : 'Desconectado'}
+              </span>
+          </div>
+        </div>
+
+        {/* --- Centro: Título (desktop) --- */}
+        <div className="hidden sm:flex flex-grow justify-center">
+            <h1 className="text-xl font-bold">Monitoreo de Temperaturas</h1>
+        </div>
+
+        {/* --- Lado Derecho: Estado (desktop) y Menú Principal --- */}
+        <div className="flex items-center gap-4">
+           <span className={`hidden sm:inline-block px-3 py-1 rounded-full text-white font-semibold text-sm transition-colors ${isPlcConnected ? 'bg-red-600' : 'bg-gray-700'}`}>
+            {plcStatus}
+          </span>
+          <nav className="hidden md:flex items-center gap-3">
+            <button onClick={() => handleNavigate("/settings")} className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">Ajustes</button>
+            {user?.admin && (
+              <button onClick={() => handleNavigate("/admin/users")} className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">Gestión</button>
+            )}
+            <button onClick={handleLogoutClick} className="bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800">Cerrar Sesión</button>
+          </nav>
+          <div className="md:hidden">
+            <button onClick={toggleMainMenu} className="text-gray-600 focus:outline-none p-2">
+              <MenuIcon />
             </button>
-          )}
-          <button onClick={handleLogoutClick} className="logout-button">
-            Cerrar Sesión
-          </button>
+          </div>
+        </div>
+      </header>
+
+      {/* --- Panel del Menú de Pestañas (Móvil, Izquierda) --- */}
+      <div className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity md:hidden ${tabsMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={toggleTabsMenu}></div>
+      <div className={`fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out md:hidden ${tabsMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-4">
+            <button onClick={toggleTabsMenu} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"><CloseIcon /></button>
+            <h2 className="text-lg font-bold mb-6 mt-2">Secciones</h2>
+            <div className="flex flex-col gap-2">
+                {tabsData.map((tab, index) => (
+                    <button 
+                        key={tab.id} 
+                        onClick={() => handleTabSelection(index)} 
+                        className={`w-full text-left p-3 font-semibold rounded-md transition-colors ${selectedIndex === index ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-200'}`}
+                    >
+                        {tab.name}
+                    </button>
+                ))}
+            </div>
         </div>
       </div>
 
-      <button className="tabs-toggle" onClick={toggleTabs}>
-        ☰ Pestañas
-      </button>
-      <ReactTabs className="react-tabs" onSelect={handleTabSelect}> {/* Usamos ReactTabs */}
-        <TabList className={`react-tabs__tab-list ${tabsOpen ? "open" : ""}`}>
-          {tabsData.map((tab) => (
-            <Tab key={tab.id}>{tab.name}</Tab>
-          ))}
-        </TabList>
+      {/* --- Panel del Menú Principal (Móvil, Derecha) --- */}
+      <div className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity md:hidden ${mainMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={toggleMainMenu}></div>
+      <div className={`fixed top-0 right-0 h-full w-64 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out md:hidden ${mainMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="p-4">
+            <button onClick={toggleMainMenu} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"><CloseIcon /></button>
+            <h2 className="text-lg font-bold mb-6 mt-2">Menú</h2>
+            <nav className="flex flex-col gap-4">
+                <button onClick={() => handleNavigate("/settings")} className="w-full text-left bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700">Ajustes</button>
+                {user?.admin && (
+                    <button onClick={() => handleNavigate("/admin/users")} className="w-full text-left bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700">Gestión</button>
+                )}
+                <button onClick={handleLogoutClick} className="w-full text-left bg-gray-700 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-800">Cerrar Sesión</button>
+            </nav>
+        </div>
+      </div>
 
-        {tabsData.map((tab) => (
-          <TabPanel key={tab.id} className="react-tabs__tab-panel">
-            <h2>{tab.name}</h2>
-            <b className="temperature">Temperatura: {tab.temperature}</b>
-            <img src={tab.name ==="Torre Fusora"? torre :horno} alt={`Imagen de ${tab.name}`} className="graficoEnPantalla" />
-          </TabPanel>
-        ))}
-      </ReactTabs>
+      {/* ================= CONTENIDO PRINCIPAL ================= */}
+      <main className="flex-1 w-full mt-20">
+        <Tabs
+          className="flex flex-col md:flex-row h-full p-2 md:p-4 gap-4"
+          selectedIndex={selectedIndex}
+          onSelect={handleTabSelection}
+          selectedTabClassName="!bg-red-600 !text-white shadow-md"
+          selectedTabPanelClassName="!block"
+        >
+          <TabList className="flex-shrink-0 md:w-64 flex-col gap-2 p-4 bg-white rounded-lg shadow-md hidden md:flex">
+            {tabsData.map((tab) => (
+              <Tab key={tab.id} className="w-full text-left p-3 font-semibold text-gray-600 cursor-pointer rounded-md hover:bg-gray-200 focus:outline-none">
+                {tab.name}
+              </Tab>
+            ))}
+          </TabList>
+
+          <div className="flex-grow p-4 md:p-6 bg-white rounded-lg shadow-lg overflow-y-auto">
+            {tabsData.map((tab) => (
+              <TabPanel key={tab.id} className="hidden h-full">
+                <div className="flex flex-col items-center justify-center gap-6 text-center h-full">
+                  <h2 className="text-3xl font-bold text-red-700">{tab.name}</h2>
+                  <p className="text-6xl font-black text-gray-800 tracking-tight">
+                    {tab.temperature}°C
+                  </p>
+                  <img src={tab.image} alt={`Imagen de ${tab.name}`} className="w-64 h-64 object-contain" />
+                </div>
+              </TabPanel>
+            ))}
+          </div>
+        </Tabs>
+      </main>
     </div>
   );
 };
 
-export default TabsComponent; // Exportamos como TabsComponent
+export default TabsComponent;
