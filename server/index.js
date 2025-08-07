@@ -1,5 +1,6 @@
 import express from 'express'
 import { PORT, JWT_SECRET } from './config.js'
+// import { API_KEY_SECRET } from './config.js'
 import { UserRepository } from './user-repository.js'
 import jwt from 'jsonwebtoken'
 import http from 'http'
@@ -7,6 +8,8 @@ import cookieParser from 'cookie-parser'
 import { wss } from './websocketServer.js'
 import connectDB from './db/db.js'
 import path from 'path'
+import ThermocoupleHistory from './models/thermocouple-history.js'
+import { Types } from 'mongoose'
 
 const app = express()
 app.use(express.json())
@@ -32,7 +35,7 @@ connectDB().catch((err) => {
   process.exit(1)
 })
 
-// Middleware de autenticación
+// Middleware de autenticación con JWT (para el frontend)
 const authenticateToken = (req, res, next) => {
   const token = req.cookies.access_token
   if (!token) return res.status(401).json({ message: 'No hay token proporcionado' })
@@ -45,6 +48,16 @@ const authenticateToken = (req, res, next) => {
   }
 }
 
+// Middleware de autenticación con API Key (para la app de escritorio)
+/*
+const authenticateApiKey = (req, res, next) => {
+  const apiKey = req.headers['x-api-key']
+  if (!apiKey || apiKey !== API_KEY_SECRET) {
+    return res.status(401).json({ message: 'API Key inválida o no proporcionada' })
+  }
+  next()
+}
+*/
 // Rutas de la API REST
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'dist', 'index.html')))
 
@@ -59,7 +72,7 @@ app.post('/api/login', async (req, res) => {
     )
     res.cookie('access_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // HTTPS en producción
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 1000 * 60 * 60
     }).json(user)
@@ -149,6 +162,69 @@ app.get('/api/env', (req, res) => {
     WS_HOST: process.env.NODE_ENV === 'production' ? req.headers.host : 'localhost:8080'
   }
   res.json(env)
+})
+
+// Endpoint POST para recibir datos de la app de escritorio (protegido con API Key)
+// --- ¡SOLUCIÓN PROVISIONAL! ---
+// Esta ruta está temporalmente protegida con JWT para evitar escrituras no autorizadas
+// en el servidor de prueba. Para la aplicación de escritorio, se recomienda usar el middleware
+// `authenticateApiKey` para una seguridad adecuada.
+app.post('/api/thermocouple-history', authenticateToken, async (req, res) => {
+  const { data, timestamp } = req.body
+  if (!data || !Array.isArray(data)) {
+    return res.status(400).json({ message: 'Formato de datos incorrecto. Se esperaba un array de mediciones.' })
+  }
+
+  const newHistory = new ThermocoupleHistory({
+    _id: new Types.ObjectId(),
+    timestamp: timestamp || new Date(),
+    data
+  })
+
+  try {
+    await newHistory.save()
+    // Notifica a los clientes WebSocket
+    const payload = JSON.stringify({
+      type: 'update',
+      payload: data
+    })
+    wss.clients.forEach(client => client.send(payload))
+    res.status(201).json({ message: 'Datos guardados y transmitidos correctamente.' })
+  } catch (error) {
+    console.error('Error al guardar los datos del termopar:', error)
+    res.status(500).json({ message: 'Error interno del servidor' })
+  }
+})
+
+// Endpoint GET para obtener el historial (protegido con JWT para el frontend)
+app.get('/api/thermocouple-history/:nombre', authenticateToken, async (req, res) => {
+  const nombreTermopar = req.params.nombre
+
+  try {
+    const historyData = await ThermocoupleHistory.aggregate([
+      { $match: { 'data.nombre': nombreTermopar } },
+      { $unwind: '$data' },
+      { $match: { 'data.nombre': nombreTermopar } },
+      {
+        $project: {
+          _id: 0,
+          temperatura: '$data.temperatura',
+          timestamp: '$timestamp'
+        }
+      },
+      { $sort: { timestamp: -1 } },
+      { $limit: 24 }
+    ])
+
+    if (historyData.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron registros para este termopar' })
+    }
+
+    res.status(200).json(historyData)
+  } catch (error) {
+    console.error('Error al obtener el historial de termopares:', error)
+    res.status(500).json({ message: 'Error interno del servidor al obtener el historial' })
+  }
 })
 
 // Ruta catch-all para el frontend (React Router)

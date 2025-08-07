@@ -1,9 +1,10 @@
+// src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import TabsComponent from "./Tabs";
 import Login from "./Login";
 import Settings from "./components/Settings";
 import UserManagement from "./components/UserManagement";
-// Elimina esta línea: import "./styles.css";
+import HistoryPage from "./components/HistoryPage"; // <--- Importa el nuevo componente
 import "./index.css"
 import { useState, useEffect } from "react";
 import api from "./services/api";
@@ -80,6 +81,15 @@ function App() {
           element={
             <ProtectedRoute adminOnly={true}>
               <UserManagement user={user} />
+            </ProtectedRoute>
+          }
+        />
+        {/* --- NUEVA RUTA PARA EL HISTORIAL --- */}
+        <Route
+          path="/history/:nombreEquipo"
+          element={
+            <ProtectedRoute>
+              <HistoryPage onLogout={handleLogout} user={user} />
             </ProtectedRoute>
           }
         />
