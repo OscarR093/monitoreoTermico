@@ -4,7 +4,7 @@ import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import { useNavigate } from "react-router-dom";
 
 // Importa tus assets como lo hacías antes
-import horno from "./assets/horno.gif";
+import horno from "./assets/horno.webp";
 import torre from "./assets/torreFusora.png";
 import logo from "./assets/fagorlogo.png";
 import useWebSocket from "./services/webSocketService";
