@@ -179,7 +179,7 @@ const TabsComponent = ({ onLogout, user }) => {
                 <div className="flex flex-col items-center justify-center gap-6 text-center h-full">
                   <h2 className="text-3xl font-bold text-red-700">{tab.name}</h2>
                   <p className="text-6xl font-black text-gray-800 tracking-tight">
-                    {tab.temperature}°C
+                    {tab.temperature}
                   </p>
                   <img src={tab.image} alt={`Imagen de ${tab.name}`} className="w-64 h-64 object-contain" />
                   {/* --- BOTÓN PARA VER HISTORIAL --- */}
