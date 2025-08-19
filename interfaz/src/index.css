@@ -1,3 +1,11 @@
+/* Mejorar la fuente del valor dentro del gauge */
+.gauge-chart-text {
+  font-size: 3rem !important;
+  font-weight: 900 !important;
+  fill: #1f2937 !important;
+  text-shadow: 1px 1px 6px #0002;
+  font-family: 'Segoe UI', 'Arial', sans-serif !important;
+}
 /* src/index.css */
 
 @import "tailwindcss";

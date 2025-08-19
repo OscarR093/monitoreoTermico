@@ -6,7 +6,7 @@ import useWebSocket from "./services/webSocketService";
 
 // Importa los assets necesarios y el componente del medidor
 import logo from "./assets/fagorlogo.png";
-import TemperatureGauge from "./components/TemperatureGauge"; // Asegúrate que la ruta sea correcta
+import TechnicalGauge from "./components/TechnicalGauge";
 
 // --- Iconos SVG (limpios y sin espacios irregulares) ---
 const MenuIcon = () => (
@@ -164,20 +164,20 @@ const TabsComponent = ({ onLogout, user }) => {
                     </TabList>
 
                     <div className="flex-grow p-4 md:p-6 bg-white rounded-lg shadow-lg overflow-y-auto">
-                        {tabsData.map((tab) => (
-                            <TabPanel key={tab.id} className="hidden h-full">
-                                <div className="flex flex-col items-center justify-center gap-6 text-center h-full">
-                                    <h2 className="text-3xl font-bold text-slate-800">{tab.name}</h2>
-
-                                    <TemperatureGauge temperature={tab.temperature} />
-
-                                    <button
-                                        onClick={() => handleViewHistory(tab.name)}
-                                        className="mt-4 bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-800 transition-colors"
-                                    >
-                                        Ver Historial
-                                    </button>
-                                </div>
+                        {tabsData.map((tab, idx) => (
+                            <TabPanel key={tab.id} forceRender={true}>
+                                {selectedIndex === idx ? (
+                                    <div className="flex flex-col items-center justify-center gap-6 text-center h-full">
+                                        <h2 className="text-3xl font-bold text-slate-800">{tab.name}</h2>
+                                        <TechnicalGauge value={typeof tab.temperature === 'number' ? tab.temperature : (parseFloat(tab.temperature) || 0)} max={1000} />
+                                        <button
+                                            onClick={() => handleViewHistory(tab.name)}
+                                            className="mt-4 bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-800 transition-colors"
+                                        >
+                                            Ver Historial
+                                        </button>
+                                    </div>
+                                ) : null}
                             </TabPanel>
                         ))}
                     </div>

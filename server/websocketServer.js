@@ -67,19 +67,30 @@ wss.on('connection', function connection (ws) {
         console.log('Datos de temperaturas consolidados recibidos de Python.')
 
         // Actualizar el estado local `currentThermopileData` con los nuevos datos
-        // Usamos el `termopar` como clave para un acceso más fácil
+
+        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+        // === CORRECCIÓN ===
+        // Cambiamos la forma en que se guarda la información en la caché.
+        // En lugar de usar una clave "termopar" que no existe, usamos "nombre".
+        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+
         parsedMessage.data.forEach(tp => {
-          currentThermopileData[`Termopar_${tp.termopar}`] = tp
+          // LÍNEA ORIGINAL (INCORRECTA):
+          // currentThermopileData[`Termopar_${tp.termopar}`] = tp
+
+          // LÍNEA CORREGIDA:
+          // Usamos el nombre del equipo como clave única, que sí viene en los datos.
+          currentThermopileData[tp.nombre] = tp
         })
 
         // Reenviar el mensaje completo (tal cual) a todos los clientes React conectados
         reactClients.forEach((client) => {
           if (client.readyState === WebSocket.OPEN) {
-            // console.log('Reenviando datos de temperaturas a React:', JSON.stringify(parsedMessage)) // Descomentar para depurar
             client.send(JSON.stringify(parsedMessage))
           }
         })
       } else if (parsedMessage.type === 'status' && typeof parsedMessage.message === 'string') {
+        // ... (resto del código sin cambios)
         console.log(`Mensaje de estado de Python: ${parsedMessage.message}`)
 
         // Si el PLC se desconecta, podrías querer "limpiar" los datos actuales
