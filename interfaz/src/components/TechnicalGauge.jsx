@@ -10,12 +10,14 @@ const TechnicalGauge = ({ value, max = 1000 }) => (
       arcWidth={0.3}
       percent={typeof value === 'number' && max > 0 ? value / max : 0}
       textColor="#1f2937"
-      formatTextValue={() => `${value} °C`} // Se mantiene el formato para el gauge
+      formatTextValue={() => ''} // No mostrar valor dentro del gauge
       needleColor="#1f2937"
       needleBaseColor="#1f2937"
-      style={{ width: '340px', height: '180px' }}
+  style={{ width: '400px', height: '220px', maxWidth: '100%' }}
     />
-    {/* Etiqueta de temperatura eliminada para evitar redundancia visual */}
+    <span className="mt-4 text-6xl font-black text-slate-800 tracking-tight drop-shadow-lg select-none">
+      {typeof value === 'number' ? `${value} °C` : value}
+    </span>
   </div>
 );
 
