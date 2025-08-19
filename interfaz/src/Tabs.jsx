@@ -169,7 +169,7 @@ const TabsComponent = ({ onLogout, user }) => {
                                 {selectedIndex === idx ? (
                                     <div className="flex flex-col items-center justify-center gap-6 text-center h-full">
                                         <h2 className="text-3xl font-bold text-slate-800">{tab.name}</h2>
-                                        <TechnicalGauge value={typeof tab.temperature === 'number' ? tab.temperature : (parseFloat(tab.temperature) || 0)} max={1000} />
+                                        <TechnicalGauge value={tab.temperature} max={1000} />
                                         <button
                                             onClick={() => handleViewHistory(tab.name)}
                                             className="mt-4 bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-800 transition-colors"
