@@ -1,4 +1,5 @@
-// src/services/webSocketService.js
+// src/services/webSocketService.js (Corregido)
+
 import { useEffect, useState } from "react";
 
 const useWebSocket = (setTabsData, setPlcStatus) => {
@@ -28,46 +29,33 @@ const useWebSocket = (setTabsData, setPlcStatus) => {
       ws.send("react-client");
     };
 
+    // --- FUNCIÓN CORREGIDA ---
     const handleMessage = (event) => {
       try {
         const message = JSON.parse(event.data);
 
-        if (message.type === 'temperatures' && Array.isArray(message.data)) {
+        // Nueva lógica: Verificamos si el mensaje tiene las propiedades que esperamos
+        if (message.equipo && typeof message.temperatura !== 'undefined') {
+          
           setTabsData((prevTabsData) => {
-            // Siempre retorna un nuevo objeto, aunque los valores sean iguales
+            // Buscamos el tab que corresponde al equipo del mensaje
             return prevTabsData.map(tab => {
-              const matchingThermopar = message.data.find(tp => tp.nombre === tab.name);
-              let updatedTemperature = tab.temperature;
-              let updatedStatus = tab.status;
-              if (matchingThermopar) {
-                if (matchingThermopar.estado === "conectado" && matchingThermopar.temperatura !== null) {
-                  updatedTemperature = matchingThermopar.temperatura;
-                } else if (matchingThermopar.estado === "Estabilizando...") {
-                  updatedTemperature = "...";
-                } else {
-                  updatedTemperature = "---";
-                }
-                updatedStatus = matchingThermopar.estado;
+              if (tab.name === message.equipo) {
+                // Si encontramos el equipo, actualizamos su temperatura
+                return { ...tab, temperature: message.temperatura, status: 'conectado' };
               }
-              // Siempre retorna un nuevo objeto
-              return {
-                ...tab,
-                temperature: updatedTemperature,
-                status: updatedStatus,
-                _update: Date.now() + Math.random() // Prop extra para asegurar nueva referencia
-              };
+              // Si no, devolvemos el tab sin cambios
+              return tab;
             });
           });
+
           setPlcStatus('Datos PLC recibidos.');
-        } else if (message.type === 'status' && typeof message.message === 'string') {
+
+        } else if (message.type === 'status') { // Mantenemos la lógica para mensajes de estado
           setPlcStatus(message.message);
-          if (message.message.includes('PLC no conectado') || message.message.includes('Python PLC desconectado')) {
-            setTabsData((prevTabsData) => {
-              return prevTabsData.map(tab => ({ ...tab, temperature: "---", status: "desconectado" }));
-            });
-          }
         } else {
-          console.warn('Mensaje desconocido del servidor:', message);
+          // Esto ya no debería ocurrir para los datos de temperatura
+          console.warn('Mensaje con formato desconocido recibido:', message);
         }
       } catch (error) {
         console.error("Error al parsear mensaje WebSocket:", error);
@@ -82,12 +70,8 @@ const useWebSocket = (setTabsData, setPlcStatus) => {
     const handleClose = () => {
       console.log("Desconectado del servidor WebSocket.");
       setPlcStatus('Desconectado del servidor. Reconectando...');
-      setTabsData((prevTabsData) => {
-        return prevTabsData.map(tab => ({ ...tab, temperature: "---", status: "desconectado" }));
-      });
-      // Lógica de reconexión simple
       setTimeout(() => {
-        // El hook se re-ejecutará debido a sus dependencias, creando una nueva conexión.
+        // La reconexión se manejará por el ciclo de vida del hook
       }, 3000);
     };
 

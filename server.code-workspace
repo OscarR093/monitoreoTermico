@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "cliente"
+		},
+		{
+			"path": "gateway"
 		}
 	],
 	"settings": {}
