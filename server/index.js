@@ -8,8 +8,8 @@ import cookieParser from 'cookie-parser'
 import { wss } from './websocketServer.js'
 import connectDB from './db/db.js'
 import path from 'path'
-import ThermocoupleHistory from './models/thermocouple-history.js'
-import { Types } from 'mongoose'
+import { getHistoryModel } from './models/thermocouple-history.js'
+// import { Types } from 'mongoose'
 
 const app = express()
 app.use(express.json())
@@ -164,65 +164,28 @@ app.get('/api/env', (req, res) => {
   res.json(env)
 })
 
-// Endpoint POST para recibir datos de la app de escritorio (protegido con API Key)
-// --- ¡SOLUCIÓN PROVISIONAL! ---
-// Esta ruta está temporalmente protegida con JWT para evitar escrituras no autorizadas
-// en el servidor de prueba. Para la aplicación de escritorio, se recomienda usar el middleware
-// `authenticateApiKey` para una seguridad adecuada.
-app.post('/api/thermocouple-history', authenticateToken, async (req, res) => {
-  const { data, timestamp } = req.body
-  if (!data || !Array.isArray(data)) {
-    return res.status(400).json({ message: 'Formato de datos incorrecto. Se esperaba un array de mediciones.' })
-  }
-
-  const newHistory = new ThermocoupleHistory({
-    _id: new Types.ObjectId(),
-    timestamp: timestamp || new Date(),
-    data
-  })
-
-  try {
-    await newHistory.save()
-    // Notifica a los clientes WebSocket
-    const payload = JSON.stringify({
-      type: 'update',
-      payload: data
-    })
-    wss.clients.forEach(client => client.send(payload))
-    res.status(201).json({ message: 'Datos guardados y transmitidos correctamente.' })
-  } catch (error) {
-    console.error('Error al guardar los datos del termopar:', error)
-    res.status(500).json({ message: 'Error interno del servidor' })
-  }
-})
-
+// Endpoint GET para obtener el historial (protegido con JWT para el frontend)
 // Endpoint GET para obtener el historial (protegido con JWT para el frontend)
 app.get('/api/thermocouple-history/:nombre', authenticateToken, async (req, res) => {
-  const nombreTermopar = req.params.nombre
+  const nombreEquipo = req.params.nombre
 
   try {
-    const historyData = await ThermocoupleHistory.aggregate([
-      { $match: { 'data.nombre': nombreTermopar } },
-      { $unwind: '$data' },
-      { $match: { 'data.nombre': nombreTermopar } },
-      {
-        $project: {
-          _id: 0,
-          temperatura: '$data.temperatura',
-          timestamp: '$timestamp'
-        }
-      },
-      { $sort: { timestamp: -1 } },
-      { $limit: 24 }
-    ])
+    // 1. Obtenemos el modelo dinámico para el equipo solicitado
+    const HistoryModel = getHistoryModel(nombreEquipo)
+
+    // 2. La consulta ahora es mucho más simple y directa
+    const historyData = await HistoryModel.find({})
+      .sort({ timestamp: -1 }) // Ordena por fecha, los más nuevos primero
+      .limit(24) // Limita a los últimos 24 registros
+      .select('temperatura timestamp -_id') // Selecciona solo los campos que necesitas
 
     if (historyData.length === 0) {
-      return res.status(404).json({ message: 'No se encontraron registros para este termopar' })
+      return res.status(404).json({ message: 'No se encontraron registros para este equipo' })
     }
 
     res.status(200).json(historyData)
   } catch (error) {
-    console.error('Error al obtener el historial de termopares:', error)
+    console.error('Error al obtener el historial:', error)
     res.status(500).json({ message: 'Error interno del servidor al obtener el historial' })
   }
 })
