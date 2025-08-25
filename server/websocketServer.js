@@ -1,89 +1,101 @@
-// websocketServer.js con MQTT
+// websocketServer.js con guardado dinámico en MongoDB
 
 import { WebSocketServer, WebSocket } from 'ws'
 import mqtt from 'mqtt'
+// --- 1. CAMBIO: Importamos nuestra nueva "fábrica" de modelos ---
+import { getHistoryModel } from './models/thermocouple-history.js'
 
-// --- 1. CONFIGURACIÓN ---
+// --- CONFIGURACIÓN (desde variables de entorno) ---
 const MQTT_BROKER_HOST = process.env.MQTT_BROKER_HOST
 const MQTT_BROKER_PORT = process.env.MQTT_BROKER_PORT
 const MQTT_USER = process.env.MQTT_USER
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD
 
-// Tópicos a los que nos suscribiremos (el '+' es un comodín para todos los equipos)
 const TOPIC_HISTORY = 'plcTemperaturas/historial/+'
 const TOPIC_REALTIME = 'plcTemperaturas/tiemporeal/+'
 const TOPIC_CONTROL = 'gatewayTemperaturas/control/tiemporeal'
 
-// --- 2. INICIALIZACIÓN DEL SERVIDOR WEBSOCKET ---
+// --- INICIALIZACIÓN Y CONEXIÓN (Sin cambios) ---
 const wss = new WebSocketServer({ noServer: true })
-
-// --- 3. CONEXIÓN AL BROKER MQTT ---
-console.log('Intentando conectar al broker MQTT...')
+console.log(`Intentando conectar al broker MQTT en ${MQTT_BROKER_HOST}...`)
 
 const mqttClient = mqtt.connect(MQTT_BROKER_HOST, {
   port: MQTT_BROKER_PORT,
   username: MQTT_USER,
   password: MQTT_PASSWORD,
   protocol: 'mqtts',
-  rejectUnauthorized: true // Asegúrate de que tu certificado sea válido
+  rejectUnauthorized: true
 })
 
 mqttClient.on('connect', () => {
   console.log('✅ Conectado exitosamente al broker MQTT.')
-
-  // Suscribirse a los tópicos de datos
-  mqttClient.subscribe(TOPIC_HISTORY, (err) => {
-    if (!err) console.log(`Suscrito al tópico de historial: ${TOPIC_HISTORY}`)
-  })
-  mqttClient.subscribe(TOPIC_REALTIME, (err) => {
-    if (!err) console.log(`Suscrito al tópico de tiempo real: ${TOPIC_REALTIME}`)
-  })
+  mqttClient.subscribe(TOPIC_HISTORY)
+  mqttClient.subscribe(TOPIC_REALTIME)
 })
 
-mqttClient.on('error', (error) => {
-  console.error('❌ Error en la conexión MQTT:', error)
-})
+mqttClient.on('error', (error) => console.error('❌ Error en la conexión MQTT:', error))
 
-// --- 4. LÓGICA DE REENVÍO DE DATOS ---
-// Cuando llega un mensaje del broker, lo reenviamos a todos los clientes web
-mqttClient.on('message', (topic, payload) => {
+// --- 2. CAMBIO: LÓGICA DE MANEJO DE MENSAJES CON GUARDADO EN DB ---
+mqttClient.on('message', async (topic, payload) => {
   const messageStr = payload.toString()
-  console.log(`Mensaje recibido del broker en topic '${topic}': ${messageStr}`)
 
-  // Reenviar a todos los clientes WebSocket conectados
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      // El payload ya es un JSON, lo enviamos tal cual
-      client.send(messageStr)
+  try {
+    const messageJson = JSON.parse(messageStr)
+
+    // Verificamos si es un mensaje del tópico de historial
+    if (topic.startsWith('plcTemperaturas/historial/')) {
+      // Filtro: Solo guardamos si la temperatura no es null y es un número válido.
+      if (messageJson.temperatura !== null && !isNaN(messageJson.temperatura)) {
+        const equipmentName = messageJson.equipo
+        console.log(`HISTORIAL: Recibido dato de ${equipmentName} para guardar en DB.`)
+
+        try {
+          // Usamos la "fábrica" para obtener el modelo de la colección correcta
+          const HistoryModel = getHistoryModel(equipmentName)
+
+          // Creamos el nuevo documento para la base de datos
+          const newHistoryEntry = new HistoryModel({
+            timestamp: new Date(messageJson.timestamp * 1000), // Convertimos timestamp Unix a objeto Date
+            temperatura: messageJson.temperatura,
+            equipo: equipmentName
+          })
+
+          await newHistoryEntry.save()
+          console.log(`✅ Dato de ${equipmentName} guardado en la colección '${HistoryModel.collection.name}'.`)
+        } catch (error) {
+          console.error(`❌ Error al guardar en MongoDB para ${equipmentName}: ${error}`)
+        }
+      } else {
+        console.log(`HISTORIAL: Dato de '${messageJson.equipo}' ignorado (temperatura inválida).`)
+      }
     }
-  })
+
+    // El reenvío a los clientes web se hace para TODOS los mensajes (historial y tiempo real)
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(messageStr)
+      }
+    })
+  } catch (error) {
+    console.error('Error al procesar el mensaje MQTT:', error)
+  }
 })
 
-// --- 5. GESTIÓN DE CLIENTES WEBSOCKET ---
+// --- GESTIÓN DE CLIENTES WEBSOCKET (Sin cambios) ---
 wss.on('connection', function connection (ws) {
-  console.log(`Cliente web conectado. Total de clientes: ${wss.clients.size}`)
-
-  // Si este es el PRIMER cliente en conectarse, enviamos el comando START
+  console.log(`WEB -> Cliente web conectado. Total: ${wss.clients.size}`)
   if (wss.clients.size === 1) {
-    console.log('Enviando comando START al gateway...')
+    console.log('MQTT -> Enviando comando START al gateway...')
     mqttClient.publish(TOPIC_CONTROL, 'START')
   }
-
   ws.on('close', () => {
-    console.log(`Cliente web desconectado. Total de clientes: ${wss.clients.size}`)
-
-    // Si este era el ÚLTIMO cliente, enviamos el comando STOP
+    console.log(`WEB -> Cliente web desconectado. Total: ${wss.clients.size}`)
     if (wss.clients.size === 0) {
-      console.log('Enviando comando STOP al gateway...')
+      console.log('MQTT -> Enviando comando STOP al gateway...')
       mqttClient.publish(TOPIC_CONTROL, 'STOP')
     }
   })
-
-  ws.on('error', (error) => {
-    console.error('Error en cliente WebSocket:', error)
-  })
+  ws.on('error', (error) => console.error('WEB -> Error en cliente WebSocket:', error))
 })
 
-// Exporta el wss para que pueda ser adjuntado a tu servidor HTTP
-// (Asumo que tienes un `server.js` o `index.js` que hace esto)
 export { wss }
