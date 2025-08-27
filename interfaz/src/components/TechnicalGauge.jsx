@@ -14,7 +14,7 @@ const TechnicalGauge = ({ value, max = 1000 }) => {
         splitNumber: 10,
         axisLine: {
           lineStyle: {
-            width: 18,
+            width: 28,
             color: [
               [0.7, '#008FFB'],
               [0.8, '#00E396'],
@@ -24,19 +24,19 @@ const TechnicalGauge = ({ value, max = 1000 }) => {
         },
         pointer: {
           show: isValidNumber,
-          length: '70%',
-          width: 6,
+          length: '80%',
+          width: 8,
           itemStyle: { color: '#1f2937' }
         },
-        axisTick: { distance: -22, length: 8, lineStyle: { color: '#888', width: 1 } },
-        splitLine: { distance: -25, length: 18, lineStyle: { color: '#888', width: 2 } },
-        axisLabel: { distance: -36, color: '#888', fontSize: 12 },
+        axisTick: { distance: -32, length: 12, lineStyle: { color: '#888', width: 1.5 } },
+        splitLine: { distance: -36, length: 24, lineStyle: { color: '#888', width: 2.5 } },
+        axisLabel: { distance: -48, color: '#888', fontSize: 16 },
         detail: {
           valueAnimation: true,
-          fontSize: isValidNumber ? 38 : 24,
+          fontSize: isValidNumber ? 44 : 26,
           fontWeight: isValidNumber ? 900 : 600,
           color: isValidNumber ? '#1f2937' : '#888',
-          offsetCenter: [0, '60%'],
+          offsetCenter: [0, '38%'],
           formatter: isValidNumber ? '{value} °C' : 'Desconectado',
         },
         data: [
@@ -47,9 +47,9 @@ const TechnicalGauge = ({ value, max = 1000 }) => {
   };
 
   return (
-    <div className="w-full flex flex-col items-center">
-      <div style={{ width: 340, height: 220, maxWidth: '100%' }}>
-        <ReactECharts option={option} style={{ width: '100%', height: 220 }} />
+    <div className="w-full flex flex-col items-center pb-8">
+      <div style={{ width: 480, height: 350, maxWidth: '100%' }}>
+        <ReactECharts option={option} style={{ width: '100%', height: 350 }} />
       </div>
     </div>
   );
