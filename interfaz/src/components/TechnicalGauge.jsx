@@ -47,8 +47,8 @@ const TechnicalGauge = ({ value, max = 1000 }) => {
         <ReactECharts option={option} style={{ width: '100%', height: 350 }} />
       </div>
       <span className={isValidNumber
-        ? "-mt-4 text-6xl font-black text-slate-800 tracking-tight drop-shadow-lg select-none"
-        : "-mt-4 text-2xl font-semibold text-slate-500 select-none"}
+        ? "-mt-10 text-6xl font-black text-slate-800 tracking-tight drop-shadow-lg select-none"
+        : "-mt-10 text-2xl font-semibold text-slate-500 select-none"}
       >
         {isValidNumber ? `${value} °C` : 'Desconectado'}
       </span>
