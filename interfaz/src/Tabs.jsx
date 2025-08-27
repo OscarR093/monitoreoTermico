@@ -165,11 +165,11 @@ const TabsComponent = ({ onLogout, user }) => {
 
                     <div className="flex-grow p-4 md:p-6 bg-white rounded-lg shadow-lg overflow-y-auto">
                         {tabsData.map((tab, idx) => (
-                            <TabPanel key={tab.id} forceRender={true}>
+                            <TabPanel key={tab.id}>
                                 {selectedIndex === idx ? (
                                     <div className="flex flex-col items-center justify-center gap-6 text-center h-full">
                                         <h2 className="text-3xl font-bold text-slate-800">{tab.name}</h2>
-                                        <TechnicalGauge value={tab.temperature} max={1000} />
+                                        <TechnicalGauge value={tab.temperature} max={1000} chartId={`gauge-chart-${tab.id}`} />
                                         <button
                                             onClick={() => handleViewHistory(tab.name)}
                                             className="mt-4 bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-800 transition-colors"
