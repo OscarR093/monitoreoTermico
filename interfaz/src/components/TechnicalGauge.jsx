@@ -32,12 +32,7 @@ const TechnicalGauge = ({ value, max = 1000 }) => {
         splitLine: { distance: -36, length: 24, lineStyle: { color: '#888', width: 2.5 } },
         axisLabel: { distance: -48, color: '#888', fontSize: 16 },
         detail: {
-          valueAnimation: true,
-          fontSize: isValidNumber ? 44 : 26,
-          fontWeight: isValidNumber ? 900 : 600,
-          color: isValidNumber ? '#1f2937' : '#888',
-          offsetCenter: [0, '38%'],
-          formatter: isValidNumber ? '{value} °C' : 'Desconectado',
+          show: false,
         },
         data: [
           { value: isValidNumber ? value : 0 }
@@ -51,6 +46,12 @@ const TechnicalGauge = ({ value, max = 1000 }) => {
       <div style={{ width: 480, height: 350, maxWidth: '100%' }}>
         <ReactECharts option={option} style={{ width: '100%', height: 350 }} />
       </div>
+      <span className={isValidNumber
+        ? "mt-2 text-6xl font-black text-slate-800 tracking-tight drop-shadow-lg select-none"
+        : "mt-2 text-2xl font-semibold text-slate-500 select-none"}
+      >
+        {isValidNumber ? `${value} °C` : 'Desconectado'}
+      </span>
     </div>
   );
 };
