@@ -1,12 +1,12 @@
 //import React from 'react';
 import GaugeChart from 'react-gauge-chart';
 
-const TechnicalGauge = ({ value, max = 1000 }) => {
+const TechnicalGauge = ({ value, max = 1000, chartId = 'gauge-chart' }) => {
   const isValidNumber = typeof value === 'number' && !isNaN(value);
   return (
     <div className="w-full flex flex-col items-center">
       <GaugeChart
-        id="gauge-chart"
+        id={chartId}
         nrOfLevels={30}
         colors={["#008FFB", "#00E396", "#FF4560"]}
         arcWidth={0.3}
