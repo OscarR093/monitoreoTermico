@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # 1. Tu aplicación Node.js
+  node-app:
+    build: ./app
+    container_name: mi-aplicacion-nodejs
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017/${MONGO_DB_NAME}?authSource=admin
+      - MQTT_BROKER_URL=mqtt://mosquitto
+      - MQTT_USER=${MOSQUITTO_USER}
+      - MQTT_PASS=${MOSQUITTO_PASS}
+    depends_on:
+      - mongodb
+      - mosquitto
+    networks:
+      - mi-red
+
+  # 2. La base de datos MongoDB
+  mongodb:
+    image: mongodb/mongodb-community-server:7.0-ubi8 # <-- Versión fijada y oficial
+    container_name: mi-database-mongo
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
+    ports:
+      - "27017:27017"
+    volumes:
+      - datos-mongo:/data/db
+    networks:
+      - mi-red
+
+  # 3. El broker Mosquitto
+  mosquitto:
+    image: eclipse-mosquitto:2.0.22-openssl # <-- Imagen específica con soporte SSL
+    container_name: mi-broker-mqtts
+    restart: unless-stopped
+    ports:
+      # Publicamos el puerto seguro 8883
+      - "8883:8883"
+    volumes:
+      # Montamos la configuración
+      - ./mosquitto/config:/mosquitto/config
+      # Montamos los certificados
+      - ./mosquitto/certs:/mosquitto/certs
+      # Montamos volúmenes para persistencia
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    networks:
+      - mi-red
+    # Comando para crear el usuario/contraseña y luego iniciar el broker
+    command: sh -c "touch /mosquitto/config/password.txt && mosquitto_passwd -b /mosquitto/config/password.txt ${MOSQUITTO_USER} ${MOSQUITTO_PASS} && exec mosquitto -c /mosquitto/config/mosquitto.conf"
+
+
+networks:
+  mi-red:
+    driver: bridge
+
+volumes:
+  datos-mongo: {}
+  mosquitto-data: {}
+  mosquitto-log: {}
