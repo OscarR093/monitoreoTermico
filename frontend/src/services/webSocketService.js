@@ -11,7 +11,7 @@ const useWebSocket = (setTabsData, setPlcStatus) => {
       .then((data) => setEnv(data))
       .catch((error) => {
         console.error("Error al obtener variables de entorno:", error);
-        setEnv({ APP_ENV: "development", WS_HOST: "localhost:8080" });
+        setEnv({ APP_ENV: "development", WS_HOST: "localhost:3000" });
       });
   }, []);
 
