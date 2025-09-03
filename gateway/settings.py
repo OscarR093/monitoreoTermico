@@ -20,10 +20,12 @@ EQUIPMENT_MAP = {
 }
 
 # --- 2. Configuración del Broker MQTT ---
-MQTT_BROKER_HOST = "monitoreotermico.duckdns.org"
-MQTT_BROKER_PORT = 8883
+# CAMBIO: Apuntamos a localhost porque el contenedor está en la misma máquina
+MQTT_BROKER_HOST = "monitoreotermico.duckdns.org" 
+MQTT_BROKER_PORT = 8883 # El puerto seguro que publicamos en Docker
 MQTT_USER = "fmex"
-MQTT_PASSWORD = "fmex456" # <-- ¡PON TU CONTRASEÑA!
+MQTT_PASSWORD = "fmex456"
+MQTT_CA_CERTS = "mosquitto/certs/ca.crt" 
 
 # --- 3. Configuración de Tópicos MQTT ---
 # Usaremos un formato con {equipo} para crear tópicos dinámicos

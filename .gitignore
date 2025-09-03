@@ -45,7 +45,8 @@ node_modules/
 /frontend/dist
 build/
 *.tsbuildinfo
-
+/backup/
+/mosquitto/config/password.txt
 # Archivos de lock de paquetes (si usas npm o yarn)
 package-lock.json
 yarn.lock

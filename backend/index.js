@@ -159,7 +159,7 @@ app.post('/protected', authenticateToken, (req, res) => {
 app.get('/api/env', (req, res) => {
   const env = {
     APP_ENV: process.env.NODE_ENV === 'production' ? 'production' : 'development',
-    WS_HOST: process.env.NODE_ENV === 'production' ? req.headers.host : 'localhost:8080'
+    WS_HOST: process.env.NODE_ENV === 'production' ? req.headers.host : 'localhost:3000'
   }
   res.json(env)
 })
