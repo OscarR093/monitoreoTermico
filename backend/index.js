@@ -157,12 +157,13 @@ app.post('/protected', authenticateToken, (req, res) => {
 })
 
 app.get('/api/env', (req, res) => {
-  const env = {
-    APP_ENV: process.env.NODE_ENV === 'production' ? 'production' : 'development',
-    WS_HOST: process.env.NODE_ENV === 'production' ? req.headers.host : 'localhost:3000'
-  }
-  res.json(env)
-})
+  res.json({
+    // Si NODE_ENV no está definida, asumimos 'development'
+    APP_ENV: process.env.NODE_ENV || 'development',
+    // Si DOMAIN_URL no está definida, usamos 'localhost:3000'
+    WS_HOST: process.env.DOMAIN_URL || 'localhost:3000'
+  });
+});
 
 // Endpoint GET para obtener el historial (protegido con JWT para el frontend)
 // Endpoint GET para obtener el historial (protegido con JWT para el frontend)
