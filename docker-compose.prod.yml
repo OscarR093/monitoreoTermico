@@ -21,7 +21,7 @@ services:
   # Aplicación Node.js (Backend)
   # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:1.0 # Asegúrate que el usuario y tag son correctos
+    image: oscarr093/monitoreotermico:1.1 # Asegúrate que el usuario y tag son correctos
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     environment:
