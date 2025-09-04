@@ -1,58 +1,65 @@
+# Archivo: docker-compose.yml (Para desarrollo local)
+
 services:
-  # 1. Tu aplicación Node.js
+  # ----------------------------------------------------
+  # Aplicación Node.js (Backend)
+  # ----------------------------------------------------
   node-app:
-    # Cambiamos 'build: ./backend' por esta estructura
+    # Construimos la imagen desde el código fuente local
     build:
-      context: . # El contexto es la raíz del proyecto (donde está el docker-compose)
-      dockerfile: ./backend/Dockerfile # La ruta al Dockerfile
+      context: .
+      dockerfile: ./backend/Dockerfile
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3000:3000" # <-- ¡ESTA LÍNEA ES LA CLAVE PARA EL ACCESO LOCAL!
     environment:
       - MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017/${MONGO_DB_NAME}?authSource=admin
       - MQTT_BROKER_URL=mqtt://mosquitto
       - MQTT_USER=${MOSQUITTO_USER}
       - MQTT_PASS=${MOSQUITTO_PASS}
-      - JWT_SECRET=${JWT_SECRET} 
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       - mongodb
       - mosquitto
     networks:
       - mi-red
 
-  # 2. La base de datos MongoDB
+  # ----------------------------------------------------
+  # Base de Datos MongoDB
+  # ----------------------------------------------------
   mongodb:
-    image: mongodb/mongodb-community-server:7.0-ubi8 # <-- Versión fijada y oficial
+    image: mongodb/mongodb-community-server:7.0-ubi8
     container_name: mi-database-mongo
     restart: unless-stopped
+    ports:
+      - "27017:27017" # Exponemos el puerto para herramientas como Compass
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
-    ports:
-      - "27017:27017"
     volumes:
       - datos-mongo:/data/db
     networks:
       - mi-red
 
-  # 3. El broker Mosquitto
+  # ----------------------------------------------------
+  # Broker Mosquitto
+  # ----------------------------------------------------
   mosquitto:
     image: eclipse-mosquitto:2.0.22-openssl
     container_name: mi-broker-mqtts
     restart: unless-stopped
     ports:
       - "8883:8883"
-      - "1883:1883" # Asegúrate de tener este puerto también
+      - "1883:1883"
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/certs:/mosquitto/certs
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
+    command: sh -c "touch /mosquitto/config/password.txt && mosquitto_passwd -b /mosquitto/config/password.txt ${MOSQUITTO_USER} ${MOSQUITTO_PASS} && chmod 600 /mosquitto/config/password.txt && exec mosquitto -c /mosquitto/config/mosquitto.conf"
     networks:
       - mi-red
-    # CAMBIO: Añadimos 'chmod 600' para asegurar el archivo de contraseñas
-    command: sh -c "touch /mosquitto/config/password.txt && mosquitto_passwd -b /mosquitto/config/password.txt ${MOSQUITTO_USER} ${MOSQUITTO_PASS} && chmod 600 /mosquitto/config/password.txt && exec mosquitto -c /mosquitto/config/mosquitto.conf"
 
 networks:
   mi-red:

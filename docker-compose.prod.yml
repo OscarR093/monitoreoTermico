@@ -1,38 +1,37 @@
 services:
   # ----------------------------------------------------
-  # Caddy (Nuevo Servicio) - Actúa como Reverse Proxy
+  # Caddy (Reverse Proxy)
   # ----------------------------------------------------
   caddy:
     image: caddy:latest
     container_name: mi-caddy-proxy
     restart: unless-stopped
     ports:
-      - "80:80"   # Para la validación HTTP de Let's Encrypt
-      - "443:443" # Para el tráfico seguro HTTPS
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile # Monta el archivo de configuración
-      - caddy-data:/data                 # Volumen para guardar los certificados SSL
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
     environment:
-      - DOMAIN_URL=${DOMAIN_URL} # Pasa la variable de dominio a Caddy
+      - DOMAIN_URL=${DOMAIN_URL}
     networks:
       - mi-red
 
   # ----------------------------------------------------
-  # Tu aplicación Node.js (Modificada para producción)
+  # Aplicación Node.js (Backend)
   # ----------------------------------------------------
   node-app:
-    # En producción, no construimos la imagen, la descargamos de un registro
-    image: tu-usuario/monitoreotermico:latest # ¡IMPORTANTE! Reemplaza con tu imagen de Docker Hub
+    image: oscarr093/monitoreotermico:1.0 # Asegúrate que el usuario y tag son correctos
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
-    # YA NO EXPONEMOS EL PUERTO 3000. Caddy maneja el acceso externo.
     environment:
       - MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017/${MONGO_DB_NAME}?authSource=admin
       - MQTT_BROKER_URL=mqtt://mosquitto
       - MQTT_USER=${MOSQUITTO_USER}
       - MQTT_PASS=${MOSQUITTO_PASS}
       - JWT_SECRET=${JWT_SECRET}
-      - DOMAIN_URL=${DOMAIN_URL} # Pasamos la URL al backend para que el frontend la conozca
+      - DOMAIN_URL=${DOMAIN_URL}
+      - NODE_ENV=${NODE_ENV}
     depends_on:
       - mongodb
       - mosquitto
@@ -40,7 +39,7 @@ services:
       - mi-red
 
   # ----------------------------------------------------
-  # La base de datos MongoDB (Modificada para producción)
+  # Base de Datos MongoDB
   # ----------------------------------------------------
   mongodb:
     image: mongodb/mongodb-community-server:7.0-ubi8
@@ -49,14 +48,13 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
-    # NUNCA EXPONGAS EL PUERTO DE LA BASE DE DATOS EN PRODUCCIÓN.
     volumes:
       - datos-mongo:/data/db
     networks:
       - mi-red
 
   # ----------------------------------------------------
-  # El broker Mosquitto (Sin cambios)
+  # Broker Mosquitto
   # ----------------------------------------------------
   mosquitto:
     image: eclipse-mosquitto:2.0.22-openssl
@@ -70,15 +68,18 @@ services:
       - ./mosquitto/certs:/mosquitto/certs
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
+    # Comando corregido con chown para permisos
     command: sh -c "touch /mosquitto/config/password.txt && mosquitto_passwd -b /mosquitto/config/password.txt ${MOSQUITTO_USER} ${MOSQUITTO_PASS} && chmod 600 /mosquitto/config/password.txt && exec mosquitto -c /mosquitto/config/mosquitto.conf"
     networks:
       - mi-red
 
+# ¡IMPORTANTE! Esta sección debe empezar sin espacios al principio
 networks:
   mi-red:
+    driver: bridge
 
 volumes:
   datos-mongo: {}
   mosquitto-data: {}
   mosquitto-log: {}
-  caddy-data: {} 
+  caddy-data: {}
