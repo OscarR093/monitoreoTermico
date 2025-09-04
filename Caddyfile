@@ -1,0 +1,6 @@
+# Caddyfile
+# Caddy usará automáticamente la variable de entorno DOMAIN_URL
+{$DOMAIN_URL} {
+    # Redirige el tráfico web a tu aplicación Node.js
+    reverse_proxy node-app:3000
+}
