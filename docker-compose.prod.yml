@@ -63,8 +63,8 @@ services:
     environment:
       - MOSQUITTO_USER=${MOSQUITTO_USER}
       - MOSQUITTO_PASS=${MOSQUITTO_PASS}
-  command: ["mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
-  networks:
+    command: ["mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
+    networks:
       - mi-red
 
 networks:
