@@ -1,4 +1,7 @@
 services:
+  # ----------------------------------------------------
+  # Caddy (Reverse Proxy y Gestor de SSL)
+  # ----------------------------------------------------
   caddy:
     image: caddy:latest
     container_name: mi-caddy-proxy
@@ -9,33 +12,36 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy-data:/data
+      - caddy-certs:/etc/caddy # Volumen para compartir certificados
     environment:
-      # Pasamos la variable de entorno a Caddy
       - DOMAIN_URL=${DOMAIN_URL}
     networks:
       - mi-red
-    # Añadimos depends_on para que Caddy espere a que la app esté lista
-    depends_on:
-      - node-app
 
+  # ----------------------------------------------------
+  # Aplicación Node.js (Backend)
+  # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:1.2 # Asegúrate que el tag es el correcto
+    image: oscarr093/monitoreotermico:1.0 # Apunta a tu imagen ya subida
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     environment:
       - MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017/${MONGO_DB_NAME}?authSource=admin
-      - MQTT_BROKER_URL=mqtt://mosquitto
+      - MQTT_BROKER_URL=mqtt://emqx # <-- Apunta al nuevo broker
       - MQTT_USER=${MOSQUITTO_USER}
       - MQTT_PASS=${MOSQUITTO_PASS}
       - JWT_SECRET=${JWT_SECRET}
       - DOMAIN_URL=${DOMAIN_URL}
-      - NODE_ENV=${NODE_ENV} # <-- AÑADIDO: Variable de entorno de producción
-    depends_on: # <-- AÑADIDO: Asegura el orden de inicio
+      - NODE_ENV=production
+    depends_on:
       - mongodb
-      - mosquitto
+      - emqx
     networks:
       - mi-red
 
+  # ----------------------------------------------------
+  # Base de Datos MongoDB
+  # ----------------------------------------------------
   mongodb:
     image: mongodb/mongodb-community-server:7.0-ubi8
     container_name: mi-database-mongo
@@ -48,22 +54,26 @@ services:
     networks:
       - mi-red
 
-  mosquitto:
-    image: eclipse-mosquitto:2.0.22-openssl
-    container_name: mi-broker-mqtts
+  # ----------------------------------------------------
+  # Broker EMQX (Reemplaza a Mosquitto)
+  # ----------------------------------------------------
+  emqx:
+    image: emqx/emqx:5.7.0
+    container_name: mi-broker-emqx
     restart: unless-stopped
-    ports:
-      - "8883:8883"
-      - "1883:1883"
-    volumes:
-      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - caddy-data:/data/caddy:ro # Monta el volumen de Caddy como solo lectura
-      - mosquitto-data:/mosquitto/data
-      - mosquitto-log:/mosquitto/log
     environment:
-      - MOSQUITTO_USER=${MOSQUITTO_USER}
-      - MOSQUITTO_PASS=${MOSQUITTO_PASS}
-    command: ["mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
+      - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
+      - "EMQX_LISTENERS__SSL__DEFAULT__BIND=8883"
+      - "EMQX_LISTENERS__SSL__DEFAULT__SSL__KEYFILE=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.key"
+      - "EMQX_LISTENERS__SSL__DEFAULT__SSL__CERTFILE=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.crt"
+      - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
+      - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+      - "18083:18083" # Puerto para el Dashboard Web de EMQX
+    volumes:
+      - caddy-certs:/etc/caddy:ro # Monta los certificados de Caddy en modo solo lectura
     networks:
       - mi-red
 
@@ -72,7 +82,5 @@ networks:
 
 volumes:
   datos-mongo: {}
-  mosquitto-data: {}
-  mosquitto-log: {}
   caddy-data: {}
-
+  caddy-certs: {} # Volumen compartido para los certificados
