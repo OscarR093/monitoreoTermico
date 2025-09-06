@@ -94,7 +94,7 @@ services:
     ports:
       - "1883:1883"
       - "8883:8883"
-      - "18083:1803"
+      - "18083:18083" # Puerto corregido para el Dashboard Web de EMQX
     volumes:
       - caddy-data:/data:ro
     networks:
