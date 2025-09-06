@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
     environment:
       - MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017/${MONGO_DB_NAME}?authSource=admin
-      - MQTT_BROKER_URL=mqtt://emqx # <-- Apunta al nuevo broker
+      - MQTT_BROKER_URL=mqtt://emqx
       - MQTT_USER=${MOSQUITTO_USER}
       - MQTT_PASS=${MOSQUITTO_PASS}
       - JWT_SECRET=${JWT_SECRET}
@@ -63,9 +63,10 @@ services:
     restart: unless-stopped
     environment:
       - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
+      # --- VARIABLES SSL CORREGIDAS ---
       - "EMQX_LISTENERS__SSL__DEFAULT__BIND=8883"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL__KEYFILE=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.key"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL__CERTFILE=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.crt"
+      - "EMQX_LISTENERS__SSL__DEFAULT__KEYFILE=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.key"
+      - "EMQX_LISTENERS__SSL__DEFAULT__CERTFILE=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.crt"
       - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
       - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
     ports:
@@ -84,3 +85,4 @@ volumes:
   datos-mongo: {}
   caddy-data: {}
   caddy-certs: {} # Volumen compartido para los certificados
+
