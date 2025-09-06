@@ -54,7 +54,7 @@ services:
       - mi-red
 
   # ----------------------------------------------------
-  # Broker EMQX (con lógica de espera y copia de certificados)
+  # Broker EMQX (con variables de script escapadas)
   # ----------------------------------------------------
   emqx:
     image: emqx/emqx:5.7.0
@@ -69,15 +69,15 @@ services:
         DEST_KEY_PATH="/opt/emqx/etc/certs/server.key";
         DEST_CERT_PATH="/opt/emqx/etc/certs/server.crt";
         
-        while [ ! -f "${SRC_KEY_PATH}" ]; do
+        while [ ! -f "$${SRC_KEY_PATH}" ]; do
           echo "⏳ Esperando a que Caddy genere el certificado SSL...";
           sleep 5;
         done &&
         
         echo "✅ ¡Certificado encontrado! Copiando y estableciendo permisos...";
-        cp "${SRC_KEY_PATH}" "${DEST_KEY_PATH}" &&
-        cp "${SRC_CERT_PATH}" "${DEST_CERT_PATH}" &&
-        chown 1000:1000 "${DEST_KEY_PATH}" "${DEST_CERT_PATH}" &&
+        cp "$${SRC_KEY_PATH}" "$${DEST_KEY_PATH}" &&
+        cp "$${SRC_CERT_PATH}" "$${DEST_CERT_PATH}" &&
+        chown 1000:1000 "$${DEST_KEY_PATH}" "$${DEST_CERT_PATH}" &&
         
         echo "🚀 Iniciando EMQX...";
         /usr/bin/docker-entrypoint.sh emqx run
@@ -94,7 +94,7 @@ services:
     ports:
       - "1883:1883"
       - "8883:8883"
-      - "18083:18083"
+      - "18083:1803"
     volumes:
       - caddy-data:/data:ro
     networks:
