@@ -60,6 +60,9 @@ services:
     image: emqx/emqx:5.7.0
     container_name: mi-broker-emqx
     restart: unless-stopped
+    depends_on: # <-- Añadimos la dependencia de inicio
+      - caddy
+    command: sh -c 'while [ ! -f /data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.key ]; do echo "⏳ Esperando a que Caddy genere el certificado SSL..."; sleep 2; done && echo "✅ ¡Certificado encontrado! Iniciando EMQX..." && /usr/bin/docker-entrypoint.sh emqx run'
     environment:
       - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
       # --- VARIABLES SSL CORREGIDAS PARA EMQX v5.x ---
