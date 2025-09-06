@@ -45,7 +45,7 @@ if [ -n "$MOSQUITTO_USER" ]; then
     mosquitto_passwd -c mosquitto/config/password.txt "$MOSQUITTO_USER"
   else
     echo "   mosquitto_passwd no está disponible en el host, usando contenedor temporal..."
-    docker run --rm -v "$PWD/mosquitto/config:/data" eclipse-mosquitto:2.0.22-openssl mosquitto_passwd -c /data/password.txt "$MOSQUITTO_USER"
+  docker run --rm -v "$PWD/mosquitto/config:/data" eclipse-mosquitto:2.0.22-openssl mosquitto_passwd -b -c /data/password.txt "$MOSQUITTO_USER" "$MOSQUITTO_PASS"
   fi
   sudo chmod 600 mosquitto/config/password.txt
   sudo chown root:root mosquitto/config/password.txt
