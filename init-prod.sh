@@ -38,9 +38,15 @@ sudo chmod 755 mosquitto/ mosquitto/config/ mosquitto/certs/
 sudo chmod 644 mosquitto/config/mosquitto.conf mosquitto/certs/*
 # --------------------------------------------------------------------
 # 3.1. Crear archivo de contraseñas para Mosquitto
+# 3.1. Crear archivo de contraseñas para Mosquitto
 echo "-> Creando archivo de contraseñas para Mosquitto..."
 if [ -n "$MOSQUITTO_USER" ]; then
-  mosquitto_passwd -c mosquitto/config/password.txt "$MOSQUITTO_USER"
+  if command -v mosquitto_passwd >/dev/null 2>&1; then
+    mosquitto_passwd -c mosquitto/config/password.txt "$MOSQUITTO_USER"
+  else
+    echo "   mosquitto_passwd no está disponible en el host, usando contenedor temporal..."
+    docker run --rm -v "$PWD/mosquitto/config:/data" eclipse-mosquitto:2.0.22-openssl mosquitto_passwd -c /data/password.txt "$MOSQUITTO_USER"
+  fi
   sudo chmod 600 mosquitto/config/password.txt
   sudo chown root:root mosquitto/config/password.txt
 else
