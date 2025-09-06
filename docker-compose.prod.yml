@@ -1,6 +1,6 @@
 services:
   # ----------------------------------------------------
-  # Caddy (Reverse Proxy y Gestor de SSL)
+  # Caddy (usando certificados locales)
   # ----------------------------------------------------
   caddy:
     image: caddy:latest
@@ -11,7 +11,8 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy-data:/data # Caddy guarda todo aquí, incluyendo los certificados
+      # Montamos nuestra carpeta de certificados manuales
+      - ./certs:/certs:ro
     environment:
       - DOMAIN_URL=${DOMAIN_URL}
     networks:
@@ -21,7 +22,7 @@ services:
   # Aplicación Node.js (Backend)
   # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:1.0 # Apunta a tu imagen ya subida
+    image: oscarr093/monitoreotermico:1.0
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     environment:
@@ -54,40 +55,17 @@ services:
       - mi-red
 
   # ----------------------------------------------------
-  # Broker EMQX (con script de inicio robusto y variables escapadas)
+  # Broker EMQX (usando certificados locales)
   # ----------------------------------------------------
   emqx:
     image: emqx/emqx:5.7.0
     container_name: mi-broker-emqx
     restart: unless-stopped
-    depends_on:
-      - caddy
-    command: >
-      sh -c '
-        SRC_KEY_PATH="/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.key";
-        SRC_CERT_PATH="/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.crt";
-        DEST_DIR="/opt/emqx/etc/certs";
-        
-        while [ ! -f "$${SRC_KEY_PATH}" ]; do
-          echo "⏳ Esperando a que Caddy genere el certificado SSL...";
-          sleep 5;
-        done
-        
-        echo "✅ ¡Certificado encontrado! Copiando y estableciendo permisos...";
-        mkdir -p "$${DEST_DIR}";
-        cp "$${SRC_KEY_PATH}" "$${DEST_DIR}/server.key";
-        cp "$${SRC_CERT_PATH}" "$${DEST_DIR}/server.crt";
-        chown 1000:1000 "$${DEST_DIR}/server.key" "$${DEST_DIR}/server.crt";
-        
-        echo "🚀 Iniciando EMQX...";
-        exec /usr/bin/docker-entrypoint.sh emqx run
-      '
     environment:
       - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
       - "EMQX_LISTENERS__SSL__DEFAULT__BIND=8883"
-      # Apunta a la ruta de destino DENTRO del contenedor de EMQX
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE=/opt/emqx/etc/certs/server.key"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE=/opt/emqx/etc/certs/server.crt"
+      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE=/certs/server.key"
+      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE=/certs/server.crt"
       - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
       - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
       - "EMQX_NODE__COOKIE=${EMQX_NODE_COOKIE}"
@@ -96,8 +74,8 @@ services:
       - "8883:8883"
       - "18083:18083"
     volumes:
-      # Monta el volumen de Caddy en modo de solo lectura para poder copiar
-      - caddy-data:/data:ro
+      # Montamos nuestra carpeta de certificados manuales
+      - ./certs:/certs:ro
     networks:
       - mi-red
 
@@ -107,4 +85,3 @@ networks:
 volumes:
   datos-mongo: {}
   caddy-data: {}
-

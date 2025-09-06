@@ -1,5 +1,11 @@
-# Caddyfile
+# Caddyfile (Configuración para usar certificados manuales)
 
+# Caddy usará la variable de entorno para el nombre del dominio
 {$DOMAIN_URL} {
+    # ¡Línea clave! Le decimos a Caddy que use nuestros certificados locales.
+    # Estas rutas apuntan a donde montaremos los certificados DENTRO del contenedor.
+    tls /certs/server.crt /certs/server.key
+    
+    # La configuración del reverse proxy no cambia
     reverse_proxy node-app:3000
 }
