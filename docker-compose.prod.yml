@@ -19,7 +19,7 @@ services:
       - node-app
 
   node-app:
-    image: oscarr093/monitoreotermico:1.1 # Asegúrate que el tag es el correcto
+    image: oscarr093/monitoreotermico:1.2 # Asegúrate que el tag es el correcto
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     environment:
