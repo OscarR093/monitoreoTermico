@@ -11,8 +11,7 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy-data:/data
-      - caddy-certs:/etc/caddy # Volumen para compartir certificados
+      - caddy-data:/data # Caddy guarda todo aquí, incluyendo los certificados
     environment:
       - DOMAIN_URL=${DOMAIN_URL}
     networks:
@@ -65,8 +64,8 @@ services:
       - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
       # --- VARIABLES SSL CORREGIDAS PARA EMQX v5.x ---
       - "EMQX_LISTENERS__SSL__DEFAULT__BIND=8883"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.key"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.crt"
+      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE=/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.key"
+      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE=/data/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.crt"
       - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
       - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
       # Mejora de seguridad para el nodo Erlang
@@ -76,7 +75,8 @@ services:
       - "8883:8883"
       - "18083:18083" # Puerto para el Dashboard Web de EMQX
     volumes:
-      - caddy-certs:/etc/caddy:ro # Monta los certificados de Caddy en modo solo lectura
+      # Montamos el volumen de DATOS de Caddy, donde realmente se guardan los certificados
+      - caddy-data:/data:ro
     networks:
       - mi-red
 
@@ -86,5 +86,5 @@ networks:
 volumes:
   datos-mongo: {}
   caddy-data: {}
-  caddy-certs: {} # Volumen compartido para los certificados
+  # El volumen 'caddy-certs' ya no es necesario
 
