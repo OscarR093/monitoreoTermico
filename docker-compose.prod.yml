@@ -63,12 +63,12 @@ services:
     restart: unless-stopped
     environment:
       - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
-      # --- VARIABLES SSL CORREGIDAS ---
       - "EMQX_LISTENERS__SSL__DEFAULT__BIND=8883"
-      - "EMQX_LISTENERS__SSL__DEFAULT__KEYFILE=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.key"
-      - "EMQX_LISTENERS__SSL__DEFAULT__CERTFILE=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.crt"
+      - "EMQX_LISTENERS__SSL__DEFAULT__KEY_PATH=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.key"
+      - "EMQX_LISTENERS__SSL__DEFAULT__CERT_PATH=/etc/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${DOMAIN_URL}/${DOMAIN_URL}.crt"
       - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
       - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
+      - "EMQX_NODE__COOKIE=$(openssl rand -hex 32)"
     ports:
       - "1883:1883"
       - "8883:8883"
