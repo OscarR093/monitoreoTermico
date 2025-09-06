@@ -1,9 +1,5 @@
-{
-    # Bloque global para decirle a Caddy que use el servidor de pruebas
-    acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
-}
+# Caddyfile
 
-# Tu configuración normal
-monitoreotermico.duckdns.org {
+{$DOMAIN_URL} {
     reverse_proxy node-app:3000
 }
