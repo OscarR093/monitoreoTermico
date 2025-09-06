@@ -60,14 +60,8 @@ services:
       - caddy-data:/data/caddy:ro # Monta el volumen de Caddy como solo lectura
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
-    command: |
-      set -x
-      rm -f /mosquitto/config/password.txt
-      echo "${MOSQUITTO_PASS}" | mosquitto_passwd -c - /mosquitto/config/password.txt ${MOSQUITTO_USER}
-      cat /mosquitto/config/password.txt || echo "No se pudo crear password.txt"
-      chmod 600 /mosquitto/config/password.txt
-      chown root:root /mosquitto/config/password.txt
-      exec mosquitto -c /mosquitto/config/mosquitto.conf
+    command: >
+      sh -c "set -x; rm -f /mosquitto/config/password.txt; echo \"${MOSQUITTO_PASS}\" | mosquitto_passwd -c - /mosquitto/config/password.txt ${MOSQUITTO_USER}; cat /mosquitto/config/password.txt || echo 'No se pudo crear password.txt'; chmod 600 /mosquitto/config/password.txt; chown root:root /mosquitto/config/password.txt; exec mosquitto -c /mosquitto/config/mosquitto.conf"
     networks:
       - mi-red
 
