@@ -8,28 +8,18 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
-      # El volumen compartido para los certificados
-      - letsencrypt-certs:/etc/letsencrypt
-      # Volumen para que Certbot pueda colocar los archivos de desafío
-      - caddy-webroot:/var/www/html
+      - caddy-data:/data
     environment:
+      # Pasamos la variable de entorno a Caddy
       - DOMAIN_URL=${DOMAIN_URL}
     networks:
       - mi-red
-
-  # El servicio de Certbot para obtener y renovar certificados
-  certbot:
-    image: certbot/certbot
-    container_name: mi-certbot
-    volumes:
-      # Comparte los mismos volúmenes que Caddy
-      - letsencrypt-certs:/etc/letsencrypt
-      - caddy-webroot:/var/www/html
-    # El comando se ejecutará a través del script de inicio
-    command: ["--version"]
+    # Añadimos depends_on para que Caddy espere a que la app esté lista
+    depends_on:
+      - node-app
 
   node-app:
-    image: oscarr093/monitoreotermico:1.1 # O la versión que corresponda
+    image: oscarr093/monitoreotermico:1.1 # Asegúrate que el tag es el correcto
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     environment:
@@ -39,7 +29,10 @@ services:
       - MQTT_PASS=${MOSQUITTO_PASS}
       - JWT_SECRET=${JWT_SECRET}
       - DOMAIN_URL=${DOMAIN_URL}
-      - NODE_ENV=${NODE_ENV}
+      - NODE_ENV=${NODE_ENV} # <-- AÑADIDO: Variable de entorno de producción
+    depends_on: # <-- AÑADIDO: Asegura el orden de inicio
+      - mongodb
+      - mosquitto
     networks:
       - mi-red
 
@@ -63,9 +56,8 @@ services:
       - "8883:8883"
       - "1883:1883"
     volumes:
-      - ./mosquitto/config:/mosquitto/config
-      # Mosquitto ahora lee los certificados del volumen compartido
-      - letsencrypt-certs:/etc/letsencrypt:ro
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - caddy-data:/data/caddy:ro # Monta el volumen de Caddy como solo lectura
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
     command: sh -c "touch /mosquitto/config/password.txt && mosquitto_passwd -b /mosquitto/config/password.txt ${MOSQUITTO_USER} ${MOSQUITTO_PASS} && chmod 600 /mosquitto/config/password.txt && exec mosquitto -c /mosquitto/config/mosquitto.conf"
@@ -79,6 +71,5 @@ volumes:
   datos-mongo: {}
   mosquitto-data: {}
   mosquitto-log: {}
-  # Nuevos volúmenes compartidos
-  letsencrypt-certs: {}
-  caddy-webroot: {}
+  caddy-data: {}
+
