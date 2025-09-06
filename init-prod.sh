@@ -37,6 +37,17 @@ sudo chmod 755 mosquitto/ mosquitto/config/ mosquitto/certs/
 # Asignamos permisos de lectura a los archivos para que el contenedor pueda leerlos
 sudo chmod 644 mosquitto/config/mosquitto.conf mosquitto/certs/*
 # --------------------------------------------------------------------
+# 3.1. Crear archivo de contraseñas para Mosquitto
+echo "-> Creando archivo de contraseñas para Mosquitto..."
+if [ -n "$MOSQUITTO_USER" ]; then
+  mosquitto_passwd -c mosquitto/config/password.txt "$MOSQUITTO_USER"
+  sudo chmod 600 mosquitto/config/password.txt
+  sudo chown root:root mosquitto/config/password.txt
+else
+  echo "❌ Error: MOSQUITTO_USER no está definido en .env"
+  exit 1
+fi
+# --------------------------------------------------------------------
 
 # 4. Limpiar Entorno Anterior (Buena práctica)
 echo "-> Limpiando cualquier instancia anterior..."
