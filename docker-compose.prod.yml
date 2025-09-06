@@ -11,7 +11,7 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy-data:/data # Caddy guarda todo aquí, incluyendo los certificados
+      - caddy-data:/data
     environment:
       - DOMAIN_URL=${DOMAIN_URL}
     networks:
@@ -21,7 +21,7 @@ services:
   # Aplicación Node.js (Backend)
   # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:1.0 # Apunta a tu imagen ya subida
+    image: oscarr093/monitoreotermico:1.0
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     environment:
@@ -54,7 +54,7 @@ services:
       - mi-red
 
   # ----------------------------------------------------
-  # Broker EMQX (con variables de script escapadas)
+  # Broker EMQX (con script de inicio robusto)
   # ----------------------------------------------------
   emqx:
     image: emqx/emqx:5.7.0
@@ -94,8 +94,9 @@ services:
     ports:
       - "1883:1883"
       - "8883:8883"
-      - "18083:18083" # Puerto corregido para el Dashboard Web de EMQX
+      - "18083:18083"
     volumes:
+      # Monta el volumen de Caddy en modo de solo lectura para poder copiar
       - caddy-data:/data:ro
     networks:
       - mi-red
