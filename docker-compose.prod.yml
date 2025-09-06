@@ -62,7 +62,7 @@ services:
       - mosquitto-log:/mosquitto/log
     command: |
       touch /mosquitto/config/password.txt
-      mosquitto_passwd -b /mosquitto/config/password.txt ${MOSQUITTO_USER} ${MOSQUITTO_PASS}
+      mosquitto_passwd -p /mosquitto/config/password.txt ${MOSQUITTO_USER} ${MOSQUITTO_PASS}
       chmod 600 /mosquitto/config/password.txt
       chown root:root /mosquitto/config/password.txt
       exec mosquitto -c /mosquitto/config/mosquitto.conf
