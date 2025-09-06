@@ -63,9 +63,8 @@ services:
     environment:
       - MOSQUITTO_USER=${MOSQUITTO_USER}
       - MOSQUITTO_PASS=${MOSQUITTO_PASS}
-    command: >
-      sh -c "set -x; rm -f /mosquitto/config/password.txt; echo \"${MOSQUITTO_PASS}\" | mosquitto_passwd -c - /mosquitto/config/password.txt ${MOSQUITTO_USER}; cat /mosquitto/config/password.txt || echo 'No se pudo crear password.txt'; chmod 600 /mosquitto/config/password.txt; chown root:root /mosquitto/config/password.txt; exec mosquitto -c /mosquitto/config/mosquitto.conf"
-    networks:
+  command: ["mosquitto", "-c", "/mosquitto/config/mosquitto.conf"]
+  networks:
       - mi-red
 
 networks:
