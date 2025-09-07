@@ -8,17 +8,13 @@ services:
     restart: unless-stopped
     command:
       # --- Configuración Estática como Argumentos ---
-      # Define los entrypoints
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      # Habilita el proveedor de Docker
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      # Define el resolutor de certificados de Let's Encrypt
-      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}" # Lee el email del .env
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      # Habilita la redirección de HTTP a HTTPS
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
     ports:
@@ -26,33 +22,35 @@ services:
       - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik-data:/data # Volumen para el acme.json y logs de Traefik
+      - traefik-data:/data
     networks:
       - mi-red
 
   # ----------------------------------------------------
-  # Asistente para Extraer Certificados
+  # Extractor de Certificados (ldez/traefik-certs-dumper)
   # ----------------------------------------------------
   cert-extractor:
-    image: fouque/traefik-acme-extractor:latest
+    image: ldez/traefik-certs-dumper:latest
     container_name: mi-cert-extractor
     restart: unless-stopped
     depends_on:
       - traefik
+    command: >
+      file --watch
+      --source /data/acme.json
+      --dest /certs
+      --domain-subdir=true
     volumes:
-      - traefik-data:/data:ro # Lee el acme.json de Traefik
-      - shared-certs:/certs   # Escribe los certificados extraídos aquí
-    environment:
-      - "ACME_JSON_PATH=/data/acme.json"
-      - "CERT_PATH=/certs"
+      - traefik-data:/data:ro
+      - shared-certs:/certs
     networks:
       - mi-red
 
   # ----------------------------------------------------
-  # Aplicación Node.js (con etiquetas para Traefik)
+  # Aplicación Node.js
   # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:1.0 # Apunta a tu imagen ya subida
+    image: oscarr093/monitoreotermico:1.0
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     environment:
@@ -73,7 +71,7 @@ services:
       - "traefik.http.services.node-app.loadbalancer.server.port=3000"
 
   # ----------------------------------------------------
-  # Base de Datos MongoDB (sin cambios)
+  # Base de Datos MongoDB
   # ----------------------------------------------------
   mongodb:
     image: mongodb/mongodb-community-server:7.0-ubi8
@@ -88,7 +86,7 @@ services:
       - mi-red
 
   # ----------------------------------------------------
-  # Broker EMQX (lee los certificados del volumen compartido)
+  # Broker EMQX (usa certificados extraídos)
   # ----------------------------------------------------
   emqx:
     image: emqx/emqx:5.7.0
@@ -99,8 +97,8 @@ services:
     environment:
       - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
       - "EMQX_LISTENERS__SSL__DEFAULT__BIND=8883"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE=/certs/${DOMAIN_URL}.key"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE=/certs/${DOMAIN_URL}.crt"
+      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE=/certs/${DOMAIN_URL}/${DOMAIN_URL}.key"
+      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE=/certs/${DOMAIN_URL}/${DOMAIN_URL}.crt"
       - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
       - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
       - "EMQX_NODE__COOKIE=${EMQX_NODE_COOKIE}"
@@ -120,4 +118,3 @@ volumes:
   datos-mongo: {}
   traefik-data: {}
   shared-certs: {}
-
