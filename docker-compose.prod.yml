@@ -1,6 +1,8 @@
+# docker-compose.prod.yml
+
 services:
   # ----------------------------------------------------
-  # Traefik (Reverse Proxy y Gestor de SSL)
+  # Traefik (Manejando HTTPS y MQTTS)
   # ----------------------------------------------------
   traefik:
     image: traefik:v3.1
@@ -11,49 +13,30 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json" # Ruta DENTRO del contenedor
+      # --- ✅ NUEVO ENTRYPOINT PARA MQTTS ---
+      - "--entrypoints.mqtts.address=:8883"
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}" # Asegúrate que tu email esté en el .env
+      - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      # --- INICIO: SECCIÓN DE REDIRECCIÓN A HTTPS ---
-      # Redirige todo el tráfico del entrypoint 'web' (HTTP) al 'websecure' (HTTPS).
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      # Especifica que el esquema de la redirección debe ser 'https'.
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      # --- FIN: SECCIÓN DE REDIRECCIÓN A HTTPS ---
     ports:
       - "80:80"
       - "443:443"
+      # --- ✅ EXPONER EL PUERTO DE MQTTS ---
+      - "8883:8883"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      # Bind Mount: Vincula la carpeta del host a la carpeta interna de Traefik
       - ./traefik-data:/data
     networks:
       - mi-red
 
   # ----------------------------------------------------
-  # Extractor de Certificados (usando Bind Mounts)
+  # ❌ EL EXTRACTOR DE CERTIFICADOS SE ELIMINA ❌
   # ----------------------------------------------------
-  cert-extractor:
-    image: ldez/traefik-certs-dumper:latest
-    container_name: mi-cert-extractor
-    restart: unless-stopped
-    depends_on:
-      - traefik
-    command: >
-      file --watch
-      --source /data/acme.json
-      --dest /certs
-      --domain-subdir
-    volumes:
-      # Bind Mount de solo lectura a los datos de Traefik
-      - ./traefik-data:/data:ro
-      # Bind Mount de escritura a la carpeta de certificados compartidos
-      - ./shared-certs:/certs
-    networks:
-      - mi-red
 
   # ----------------------------------------------------
-  # Aplicación Node.js (con etiquetas para Traefik)
+  # Aplicación Node.js (sin cambios)
   # ----------------------------------------------------
   node-app:
     image: oscarr093/monitoreotermico:1.0
@@ -87,40 +70,41 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
     volumes:
-      - datos-mongo:/data/db # Mantenemos el volumen de Docker para la base de datos
+      - datos-mongo:/data/db
     networks:
       - mi-red
 
   # ----------------------------------------------------
-  # Broker EMQX (usando Bind Mounts)
+  # Broker EMQX (Simplificado y con etiquetas para Traefik)
   # ----------------------------------------------------
   emqx:
     image: emqx/emqx:5.7.0
     container_name: mi-broker-emqx
     restart: unless-stopped
-    depends_on:
-      - cert-extractor
     environment:
+      # --- ✅ SOLO CONFIGURACIÓN BÁSICA. EMQX NO MANEJA SSL ---
       - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
-      - "EMQX_LISTENERS__SSL__DEFAULT__BIND=8883"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE=/certs/${DOMAIN_URL}/${DOMAIN_URL}.key"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE=/certs/${DOMAIN_URL}/${DOMAIN_URL}.crt"
       - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
       - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
       - "EMQX_NODE__COOKIE=${EMQX_NODE_COOKIE}"
     ports:
-      - "1883:1883"
-      - "8883:8883"
-      - "18083:18083"
-    volumes:
-      # Bind Mount de solo lectura a la carpeta de certificados compartidos
-      - ./shared-certs:/certs:ro
+      - "1883:1883" # Opcional, para pruebas en la red local sin SSL
+      - "18083:18083" # Dashboard de EMQX
+    # --- ❌ VOLUMEN DE CERTIFICADOS ELIMINADO ❌
     networks:
       - mi-red
+    labels:
+      # --- ✅ NUEVAS ETIQUETAS PARA TRAEFIK TCP ---
+      - "traefik.enable=true"
+      # Define un router TCP para el tráfico MQTTS que llega por el entrypoint 'mqtts'
+      - "traefik.tcp.routers.emqx-secure.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.emqx-secure.entrypoints=mqtts"
+      - "traefik.tcp.routers.emqx-secure.tls.certresolver=letsencrypt"
+      # Define que el tráfico se reenvíe al puerto interno 1883 de este servicio (emqx)
+      - "traefik.tcp.services.emqx-secure.loadbalancer.server.port=1883"
 
 networks:
   mi-red:
 
 volumes:
-  datos-mongo: {} # Solo el volumen de la base de datos es gestionado por Docker
-
+  datos-mongo: {}
