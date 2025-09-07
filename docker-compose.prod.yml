@@ -1,28 +1,58 @@
 services:
   # ----------------------------------------------------
-  # Caddy (usando certificados locales)
+  # Traefik (Reverse Proxy y Gestor de SSL)
   # ----------------------------------------------------
-  caddy:
-    image: caddy:latest
-    container_name: mi-caddy-proxy
+  traefik:
+    image: traefik:v3.1 # <-- Versión fijada para estabilidad
+    container_name: mi-traefik-proxy
     restart: unless-stopped
+    command:
+      # --- Configuración Estática como Argumentos ---
+      # Define los entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Habilita el proveedor de Docker
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # Define el resolutor de certificados de Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}" # Lee el email del .env
+      - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      # Habilita la redirección de HTTP a HTTPS
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      # Montamos nuestra carpeta de certificados manuales
-      - ./certs:/certs:ro
-    environment:
-      - DOMAIN_URL=${DOMAIN_URL}
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-data:/data # Volumen para el acme.json y logs de Traefik
     networks:
       - mi-red
 
   # ----------------------------------------------------
-  # Aplicación Node.js (Backend)
+  # Asistente para Extraer Certificados
+  # ----------------------------------------------------
+  cert-extractor:
+    image: fouque/traefik-acme-extractor:latest
+    container_name: mi-cert-extractor
+    restart: unless-stopped
+    depends_on:
+      - traefik
+    volumes:
+      - traefik-data:/data:ro # Lee el acme.json de Traefik
+      - shared-certs:/certs   # Escribe los certificados extraídos aquí
+    environment:
+      - "ACME_JSON_PATH=/data/acme.json"
+      - "CERT_PATH=/certs"
+    networks:
+      - mi-red
+
+  # ----------------------------------------------------
+  # Aplicación Node.js (con etiquetas para Traefik)
   # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:1.0
+    image: oscarr093/monitoreotermico:1.0 # Apunta a tu imagen ya subida
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     environment:
@@ -33,14 +63,17 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - DOMAIN_URL=${DOMAIN_URL}
       - NODE_ENV=production
-    depends_on:
-      - mongodb
-      - emqx
     networks:
       - mi-red
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.node-app.rule=Host(`${DOMAIN_URL}`)"
+      - "traefik.http.routers.node-app.entrypoints=websecure"
+      - "traefik.http.routers.node-app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.node-app.loadbalancer.server.port=3000"
 
   # ----------------------------------------------------
-  # Base de Datos MongoDB
+  # Base de Datos MongoDB (sin cambios)
   # ----------------------------------------------------
   mongodb:
     image: mongodb/mongodb-community-server:7.0-ubi8
@@ -55,17 +88,19 @@ services:
       - mi-red
 
   # ----------------------------------------------------
-  # Broker EMQX (usando certificados locales)
+  # Broker EMQX (lee los certificados del volumen compartido)
   # ----------------------------------------------------
   emqx:
     image: emqx/emqx:5.7.0
     container_name: mi-broker-emqx
     restart: unless-stopped
+    depends_on:
+      - cert-extractor
     environment:
       - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
       - "EMQX_LISTENERS__SSL__DEFAULT__BIND=8883"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE=/certs/server.key"
-      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE=/certs/server.crt"
+      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__KEYFILE=/certs/${DOMAIN_URL}.key"
+      - "EMQX_LISTENERS__SSL__DEFAULT__SSL_OPTIONS__CERTFILE=/certs/${DOMAIN_URL}.crt"
       - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
       - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
       - "EMQX_NODE__COOKIE=${EMQX_NODE_COOKIE}"
@@ -74,8 +109,7 @@ services:
       - "8883:8883"
       - "18083:18083"
     volumes:
-      # Montamos nuestra carpeta de certificados manuales
-      - ./certs:/certs:ro
+      - shared-certs:/certs:ro
     networks:
       - mi-red
 
@@ -84,4 +118,6 @@ networks:
 
 volumes:
   datos-mongo: {}
-  caddy-data: {}
+  traefik-data: {}
+  shared-certs: {}
+
