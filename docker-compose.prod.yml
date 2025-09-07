@@ -1,4 +1,4 @@
-# docker-compose.prod.yml
+version: '3.8'
 
 services:
   # ----------------------------------------------------
@@ -13,9 +13,8 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      # --- ✅ NUEVO ENTRYPOINT PARA MQTTS ---
       - "--entrypoints.mqtts.address=:8883"
-      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}" # Asegúrate que tu email esté en el .env
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
@@ -23,17 +22,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      # --- ✅ EXPONER EL PUERTO DE MQTTS ---
       - "8883:8883"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik-data:/data
     networks:
       - mi-red
-
-  # ----------------------------------------------------
-  # ❌ EL EXTRACTOR DE CERTIFICADOS SE ELIMINA ❌
-  # ----------------------------------------------------
 
   # ----------------------------------------------------
   # Aplicación Node.js (sin cambios)
@@ -75,14 +69,13 @@ services:
       - mi-red
 
   # ----------------------------------------------------
-  # Broker EMQX (Simplificado y con etiquetas para Traefik)
+  # Broker EMQX (Corregido)
   # ----------------------------------------------------
   emqx:
     image: emqx/emqx:5.7.0
     container_name: mi-broker-emqx
     restart: unless-stopped
     environment:
-      # --- ✅ SOLO CONFIGURACIÓN BÁSICA. EMQX NO MANEJA SSL ---
       - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
       - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
       - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
@@ -90,17 +83,14 @@ services:
     ports:
       - "1883:1883" # Opcional, para pruebas en la red local sin SSL
       - "18083:18083" # Dashboard de EMQX
-    # --- ❌ VOLUMEN DE CERTIFICADOS ELIMINADO ❌
     networks:
       - mi-red
     labels:
-      # --- ✅ NUEVAS ETIQUETAS PARA TRAEFIK TCP ---
       - "traefik.enable=true"
-      # Define un router TCP para el tráfico MQTTS que llega por el entrypoint 'mqtts'
-      - "traefik.tcp.routers.emqx-secure.rule=HostSNI(`*`)"
+      # --- ✅ Corrección: Usar el dominio definido en DOMAIN_URL ---
+      - "traefik.tcp.routers.emqx-secure.rule=HostSNI(`${DOMAIN_URL}`)"
       - "traefik.tcp.routers.emqx-secure.entrypoints=mqtts"
       - "traefik.tcp.routers.emqx-secure.tls.certresolver=letsencrypt"
-      # Define que el tráfico se reenvíe al puerto interno 1883 de este servicio (emqx)
       - "traefik.tcp.services.emqx-secure.loadbalancer.server.port=1883"
 
 networks:
