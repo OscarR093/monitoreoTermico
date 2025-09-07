@@ -21,7 +21,7 @@ EQUIPMENT_MAP = {
 
 # --- 2. Configuración del Broker MQTT ---
 # CAMBIO: Apuntamos a localhost porque el contenedor está en la misma máquina
-MQTT_BROKER_HOST = "monitemp.duckdns.org" 
+MQTT_BROKER_HOST = "monitoreot.duckdns.org" 
 MQTT_BROKER_PORT = 8883 # El puerto seguro que publicamos en Docker
 MQTT_USER = "fmex"
 MQTT_PASSWORD = "fmex456"

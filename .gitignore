@@ -3,7 +3,6 @@
 # =================================================================
 # Archivos de entorno y secretos 
 .env
-.env.*
 *.pem
 *.key
 *.enc
