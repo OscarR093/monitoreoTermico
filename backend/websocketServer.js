@@ -3,10 +3,10 @@ import mqtt from 'mqtt'
 import { getHistoryModel } from './models/thermocouple-history.js'
 
 // --- 1. CAMBIO: Importamos la configuración desde el punto central ---
-import { 
-  MQTT_BROKER_URL, 
-  MQTT_USER, 
-  MQTT_PASS 
+import {
+  MQTT_BROKER_URL,
+  MQTT_USER,
+  MQTT_PASS
 } from './config.js'
 
 // --- CONSTANTES DEL PROYECTO (Sin cambios) ---
