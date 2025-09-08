@@ -21,11 +21,18 @@ EQUIPMENT_MAP = {
 
 # --- 2. Configuración del Broker MQTT ---
 # CAMBIO: Apuntamos a localhost porque el contenedor está en la misma máquina
-MQTT_BROKER_HOST = "monitoreot.duckdns.org" 
-MQTT_BROKER_PORT = 8883 # El puerto seguro que publicamos en Docker
-MQTT_USER = "fmex"
-MQTT_PASSWORD = "fmex456"
-MQTT_CA_CERTS = "mosquitto/certs/ca.crt" 
+#MQTT_BROKER_HOST = "monitoreot.duckdns.org" 
+MQTT_BROKER_HOST = "localhost" 
+#MQTT_BROKER_PORT = 8883 # El puerto seguro que publicamos en Docker
+MQTT_BROKER_PORT = 1883
+
+#MQTT_USER = "fmex"
+#MQTT_PASSWORD = "fmex456"
+
+MQTT_USER = ""
+MQTT_PASSWORD = ""
+
+#MQTT_CA_CERTS = "mosquitto/certs/ca.crt" 
 
 # --- 3. Configuración de Tópicos MQTT ---
 # Usaremos un formato con {equipo} para crear tópicos dinámicos

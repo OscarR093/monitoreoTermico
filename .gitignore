@@ -49,3 +49,4 @@ build/
 # Archivos de lock de paquetes (si usas npm o yarn)
 package-lock.json
 yarn.lock
+*.dev*
