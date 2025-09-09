@@ -3,86 +3,53 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useWebSocket from '../services/webSocketService'
 import Header from './Header'
+import IndustrialTemperatureDisplay from './IndustrialTemperatureDisplay'
 
 // Componente para cada celda del dashboard
 const TemperatureCard = ({ equipment, onClick }) => {
-  const isValidTemp = typeof equipment.temperature === 'number' && !isNaN(equipment.temperature)
+  const navigate = useNavigate()
   
-  // Lógica de rangos específicos por equipo
-  const getTemperatureStatus = (temp, equipmentName) => {
-    if (!isValidTemp) return { 
-      status: 'disconnected', 
-      color: 'text-gray-400', 
-      bgColor: 'bg-gray-700 border-gray-600 hover:bg-gray-650',
-      tempColor: 'text-gray-400'
-    }
-    
-    const isTorreFusora = equipmentName === 'Torre Fusora'
-    const minRange = 710
-    const maxRange = isTorreFusora ? 780 : 750
-    
-    if (temp >= minRange && temp <= maxRange) {
-      return {
-        status: 'optimal',
-        color: 'text-green-300',
-        bgColor: 'bg-gray-700 border-green-500 hover:bg-gray-600',
-        tempColor: 'text-green-300'
-      }
-    } else if (temp < 400) {
-      return {
-        status: 'low',
-        color: 'text-blue-300',
-        bgColor: 'bg-gray-700 border-blue-500 hover:bg-gray-600',
-        tempColor: 'text-blue-300'
-      }
-    } else if (temp < minRange) {
-      return {
-        status: 'warming',
-        color: 'text-orange-300',
-        bgColor: 'bg-gray-700 border-orange-500 hover:bg-gray-600',
-        tempColor: 'text-orange-300'
-      }
-    } else {
-      return {
-        status: 'critical',
-        color: 'text-red-300',
-        bgColor: 'bg-gray-700 border-red-500 hover:bg-gray-600',
-        tempColor: 'text-red-300'
-      }
-    }
+  // Determinar si el equipo está realmente activo basado en datos válidos
+  const hasValidTemperature = equipment.temperature && 
+    ((typeof equipment.temperature === 'number' && !isNaN(equipment.temperature)) ||
+     (typeof equipment.temperature === 'object' && equipment.temperature.value !== undefined && 
+      typeof equipment.temperature.value === 'number' && !isNaN(equipment.temperature.value)))
+  
+  const isActive = hasValidTemperature && equipment.isActive !== false
+  const temperatureValue = equipment.temperature?.value || equipment.temperature || 0
+
+  const handleCardClick = () => {
+    navigate(`/equipment-detail/${equipment.name}`, { state: equipment })
   }
 
-  const tempStatus = getTemperatureStatus(equipment.temperature, equipment.name)
-
   return (
-    <div
-      onClick={onClick}
+    <div 
       className={`
-        relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-xl
-        ${tempStatus.bgColor} backdrop-blur-sm shadow-lg
+        bg-gray-900 p-6 rounded-lg shadow-lg border-2 transition-all duration-300 cursor-pointer
+        hover:shadow-xl transform hover:scale-105
+        ${isActive ? 'border-red-600 hover:border-red-500' : 'border-gray-600 hover:border-gray-500'}
       `}
+      onClick={handleCardClick}
     >
-      <div className='flex flex-col items-center justify-center h-full'>
-        <h3 className='text-lg font-bold text-gray-100 mb-3 text-center'>
-          {equipment.name}
-        </h3>
-        
-        <div className={`text-4xl font-black mb-2 ${tempStatus.tempColor} drop-shadow-sm`}>
-          {isValidTemp ? `${equipment.temperature}°C` : '---'}
+      <div className="flex flex-col items-center space-y-4">
+        <div className="flex items-center justify-between w-full">
+          <h3 className="text-lg font-bold text-red-500">{equipment.name}</h3>
+          <div className={`
+            w-3 h-3 rounded-full flex-shrink-0
+            ${isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}
+          `} />
         </div>
         
-        <div className={`text-sm font-medium ${isValidTemp ? 'text-gray-300' : 'text-gray-400'}`}>
-          {isValidTemp ? 'En Línea' : 'Desconectado'}
+        <IndustrialTemperatureDisplay 
+          temperature={temperatureValue}
+          deviceName={equipment.name}
+          isActive={isActive}
+        />
+        
+        <div className="text-sm text-gray-400 text-center">
+          <div>Estado: {isActive ? 'Activo' : 'Inactivo'}</div>
+          <div className="text-xs opacity-75">Click para ver detalles</div>
         </div>
-        
-        {/* Indicador de estado con diseño industrial */}
-        <div className={`
-          absolute top-3 right-3 w-4 h-4 rounded-sm border-2 border-gray-500
-          ${isValidTemp ? 'bg-green-500 shadow-green-500/50 shadow-lg' : 'bg-gray-500'}
-        `} />
-        
-        {/* Línea decorativa industrial */}
-        <div className='absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-red-600 to-red-700 rounded-b-xl opacity-80' />
       </div>
     </div>
   )
@@ -96,17 +63,19 @@ const Dashboard = ({ onLogout, user }) => {
 
   useEffect(() => {
     const initialEquipment = [
-      { id: 1, name: 'Torre Fusora', temperature: '---' },
-      { id: 2, name: 'Linea 1', temperature: '---' },
-      { id: 3, name: 'Linea 2', temperature: '---' },
-      { id: 4, name: 'Linea 3', temperature: '---' },
-      { id: 5, name: 'Linea 4', temperature: '---' },
-      { id: 6, name: 'Linea 7', temperature: '---' },
-      { id: 7, name: 'Estacion 1', temperature: '---' },
-      { id: 8, name: 'Estacion 2', temperature: '---' }
+      { id: 1, name: 'Torre Fusora', temperature: { value: 0 }, isActive: true },
+      { id: 2, name: 'Linea 1', temperature: { value: 0 }, isActive: true },
+      { id: 3, name: 'Linea 2', temperature: { value: 0 }, isActive: true },
+      { id: 4, name: 'Linea 3', temperature: { value: 0 }, isActive: true },
+      { id: 5, name: 'Linea 4', temperature: { value: 0 }, isActive: true },
+      { id: 6, name: 'Linea 7', temperature: { value: 0 }, isActive: true },
+      { id: 7, name: 'Estacion 1', temperature: { value: 0 }, isActive: true },
+      { id: 8, name: 'Estacion 2', temperature: { value: 0 }, isActive: true }
     ]
-    setEquipmentData(initialEquipment)
-  }, [])
+    if (equipmentData.length === 0) {
+      setEquipmentData(initialEquipment)
+    }
+  }, [equipmentData.length])
 
   const handleEquipmentClick = (equipment) => {
     navigate(`/equipment-detail/${equipment.name}`, { state: equipment })
@@ -133,11 +102,10 @@ const Dashboard = ({ onLogout, user }) => {
           
           {/* Grid 2x4 responsive con estilo industrial */}
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6'>
-            {equipmentData.map((equipment) => (
+            {equipmentData.map((equipment, index) => (
               <TemperatureCard
-                key={equipment.id}
+                key={equipment.id || equipment._id || index}
                 equipment={equipment}
-                onClick={() => handleEquipmentClick(equipment)}
               />
             ))}
           </div>
