@@ -1,67 +1,79 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import TabsComponent from "./Tabs";
-import Login from "./Login";
-import Settings from "./components/Settings";
-import UserManagement from "./components/UserManagement";
-import HistoryPage from "./components/HistoryPage"; // <--- Importa el nuevo componente
-import "./index.css"
-import { useState, useEffect } from "react";
-import api from "./services/api";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import TabsComponent from './Tabs'
+import Login from './Login'
+import Settings from './components/Settings'
+import UserManagement from './components/UserManagement'
+import HistoryPage from './components/HistoryPage'
+import ForceUpdateProfile from './components/ForceUpdateProfile'
+import './index.css'
+import { useState, useEffect } from 'react'
+import api from './services/api'
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+function App () {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function checkAuth() {
+    async function checkAuth () {
       try {
-        const response = await api.get("/auth/check");
-        setUser(response.user || response);
-        setIsAuthenticated(true);
+        // Siempre obtenemos el usuario desde /api/auth/check
+        const response = await api.get('/auth/check')
+        // Si la respuesta tiene .user, usamos ese objeto
+        if (response && response.user) {
+          setUser(response.user)
+        } else {
+          setUser(response)
+        }
+        setIsAuthenticated(true)
       } catch (error) {
-        setIsAuthenticated(false);
-        setUser(null);
+        setIsAuthenticated(false)
+        setUser(null)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-    checkAuth();
-  }, []);
+    checkAuth()
+  }, [])
 
   const handleLogout = async () => {
     try {
-      await api.post("/logout");
-      setIsAuthenticated(false);
-      setUser(null);
+      await api.post('/logout')
+      setIsAuthenticated(false)
+      setUser(null)
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+      console.error('Error al cerrar sesión:', error)
     }
-  };
+  }
 
   const ProtectedRoute = ({ children, adminOnly = false }) => {
-    if (loading) return <div className="text-center text-2xl p-12 text-gray-600">Cargando...</div>;
+    if (loading) return <div className='text-center text-2xl p-12 text-gray-600'>Cargando...</div>
     if (!isAuthenticated) {
-      return <Navigate to="/login" />;
+      return <Navigate to='/login' />
     }
     if (adminOnly && !user?.admin) {
-      return <Navigate to="/" />;
+      return <Navigate to='/' />
     }
-    return children;
-  };
+    return children
+  }
 
-  if (loading) return <div className="text-center text-2xl p-12 text-gray-600">Cargando...</div>;
+  if (loading) return <div className='text-center text-2xl p-12 text-gray-600'>Cargando...</div>
+
+  // --- Redirección obligatoria si el usuario debe actualizar datos ---
+  if (isAuthenticated && user?.mustChangePassword) {
+    return <ForceUpdateProfile user={user} />
+  }
 
   return (
     <Router>
       <Routes>
         <Route
-          path="/login"
+          path='/login'
           element={<Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />}
         />
         <Route
-          path="/"
+          path='/'
           element={
             <ProtectedRoute>
               <TabsComponent onLogout={handleLogout} user={user} />
@@ -69,7 +81,7 @@ function App() {
           }
         />
         <Route
-          path="/settings"
+          path='/settings'
           element={
             <ProtectedRoute>
               <Settings onLogout={handleLogout} user={user} />
@@ -77,26 +89,26 @@ function App() {
           }
         />
         <Route
-          path="/admin/users"
+          path='/admin/users'
           element={
-            <ProtectedRoute adminOnly={true}>
+            <ProtectedRoute adminOnly>
               <UserManagement user={user} />
             </ProtectedRoute>
           }
         />
         {/* --- NUEVA RUTA PARA EL HISTORIAL --- */}
         <Route
-          path="/history/:nombreEquipo"
+          path='/history/:nombreEquipo'
           element={
             <ProtectedRoute>
               <HistoryPage onLogout={handleLogout} user={user} />
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />
+        <Route path='*' element={<Navigate to={isAuthenticated ? '/' : '/login'} />} />
       </Routes>
     </Router>
-  );
+  )
 }
 
-export default App;
+export default App

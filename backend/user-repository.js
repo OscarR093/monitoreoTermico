@@ -40,7 +40,11 @@ export class UserRepository {
       id: user._id.toString(),
       username: user.username,
       fullName: user.fullName,
-      admin: user.admin
+      admin: user.admin,
+      isSuperAdmin: user.isSuperAdmin || false,
+      mustChangePassword: user.mustChangePassword || false,
+      email: user.email,
+      cellPhone: user.cellPhone
     }
   }
 
@@ -68,7 +72,10 @@ export class UserRepository {
     }
   }
 
-  static async updateUserById (id, { username, email, fullName, admin, password }) {
+  static async updateUserById (id, updateFields) {
+    const { username, email, fullName, admin, password, cellPhone, mustChangePassword } = updateFields
+
+    // Validaciones
     if (username) Validation.username(username)
     if (email) Validation.email(email)
     if (fullName) Validation.fullName(fullName)
@@ -76,10 +83,27 @@ export class UserRepository {
       throw new Error('Admin must be a boolean')
     }
     if (password) Validation.password(password)
+    if (mustChangePassword !== undefined && typeof mustChangePassword !== 'boolean') {
+      throw new Error('mustChangePassword must be a boolean')
+    }
 
-    if (username) {
-      const existingUser = await User.findOne({ username, _id: { $ne: id } })
-      if (existingUser) throw new Error(`${username} already exists`)
+    // Verificar si el username o email ya existen
+    if (username || email) {
+      const query = {
+        _id: { $ne: id },
+        $or: []
+      }
+
+      if (username) query.$or.push({ username })
+      if (email) query.$or.push({ email })
+
+      const existingUser = await User.findOne(query)
+      if (existingUser) {
+        // Error genérico para no revelar si fue el email o username
+        const error = new Error('Credenciales no disponibles')
+        error.status = 409 // Conflict
+        throw error
+      }
     }
 
     const updateData = {}
@@ -87,6 +111,8 @@ export class UserRepository {
     if (email) updateData.email = email
     if (fullName) updateData.fullName = fullName
     if (admin !== undefined) updateData.admin = admin
+    if (cellPhone) updateData.cellPhone = cellPhone
+    if (mustChangePassword !== undefined) updateData.mustChangePassword = mustChangePassword
     if (password) updateData.password = await bcrypt.hash(password, SALT_ROUNDS)
 
     const updatedUser = await User.findByIdAndUpdate(

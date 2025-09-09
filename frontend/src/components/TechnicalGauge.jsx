@@ -1,8 +1,8 @@
-import React from 'react';
-import ReactECharts from 'echarts-for-react';
+import React from 'react'
+import ReactECharts from 'echarts-for-react'
 
 const TechnicalGauge = ({ value, max = 1000 }) => {
-  const isValidNumber = typeof value === 'number' && !isNaN(value);
+  const isValidNumber = typeof value === 'number' && !isNaN(value)
   const option = {
     series: [
       {
@@ -10,7 +10,7 @@ const TechnicalGauge = ({ value, max = 1000 }) => {
         startAngle: 210,
         endAngle: -30,
         min: 0,
-        max: max,
+        max,
         splitNumber: 10,
         axisLine: {
           lineStyle: {
@@ -32,28 +32,28 @@ const TechnicalGauge = ({ value, max = 1000 }) => {
         splitLine: { distance: -36, length: 24, lineStyle: { color: '#888', width: 2.5 } },
         axisLabel: { distance: -48, color: '#888', fontSize: 16 },
         detail: {
-          show: false,
+          show: false
         },
         data: [
           { value: isValidNumber ? value : 0 }
         ]
       }
     ]
-  };
+  }
 
   return (
-    <div className="w-full flex flex-col items-center pb-8">
+    <div className='w-full flex flex-col items-center pb-8'>
       <div style={{ width: 480, height: 350, maxWidth: '100%' }}>
         <ReactECharts option={option} style={{ width: '100%', height: 350 }} />
       </div>
       <span className={isValidNumber
-        ? "-mt-10 text-6xl font-black text-slate-800 tracking-tight drop-shadow-lg select-none"
-        : "-mt-10 text-2xl font-semibold text-slate-500 select-none"}
+        ? '-mt-10 text-6xl font-black text-slate-800 tracking-tight drop-shadow-lg select-none'
+        : '-mt-10 text-2xl font-semibold text-slate-500 select-none'}
       >
         {isValidNumber ? `${value} °C` : 'Desconectado'}
       </span>
     </div>
-  );
-};
+  )
+}
 
-export default TechnicalGauge;
+export default TechnicalGauge
