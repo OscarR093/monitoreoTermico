@@ -48,17 +48,17 @@ function Login ({ setIsAuthenticated, setUser }) {
   }
 
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 font-sans'>
-      <div className='w-full max-w-sm p-8 space-y-6 bg-white rounded-xl shadow-lg'>
-        <img src={logo} alt='Logo Fagor' className='w-60 mx-auto' />
+    <div className='flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4 font-sans'>
+      <div className='w-full max-w-sm p-8 space-y-6 bg-gray-800 rounded-xl shadow-2xl border border-gray-700'>
+        <img src={logo} alt='Logo Fagor' className='w-60 mx-auto filter brightness-110' />
 
-        <h2 className='text-2xl font-bold text-center text-gray-800'>
+        <h2 className='text-2xl font-bold text-center text-gray-100'>
           Acceso al sistema de monitoreo
         </h2>
 
         <form onSubmit={handleSubmit} className='space-y-4'>
           <div>
-            <label htmlFor='username' className='block text-sm font-bold text-gray-600 mb-1'>
+            <label htmlFor='username' className='block text-sm font-medium text-gray-300 mb-2'>
               Usuario
             </label>
             <input
@@ -67,13 +67,13 @@ function Login ({ setIsAuthenticated, setUser }) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-                            // CAMBIO: Color del anillo de enfoque
-              className='w-full px-4 py-2 text-gray-800 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-600'
+              className='w-full px-4 py-3 text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors'
+              placeholder='Ingrese su usuario'
             />
           </div>
 
           <div>
-            <label htmlFor='password' className='block text-sm font-bold text-gray-600 mb-1'>
+            <label htmlFor='password' className='block text-sm font-medium text-gray-300 mb-2'>
               Contraseña
             </label>
             <div className='relative'>
@@ -83,14 +83,13 @@ function Login ({ setIsAuthenticated, setUser }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                                // CAMBIO: Color del anillo de enfoque
-                className='w-full px-4 py-2 text-gray-800 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-600'
+                className='w-full px-4 py-3 pr-12 text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors'
+                placeholder='Ingrese su contraseña'
               />
               <button
                 type='button'
                 onClick={() => setShowPassword(!showPassword)}
-                                // CAMBIO: Color del hover del icono
-                className='absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-slate-600'
+                className='absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-gray-200 transition-colors'
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -99,8 +98,7 @@ function Login ({ setIsAuthenticated, setUser }) {
           </div>
 
           {error && (
-          // CAMBIO: Paleta de colores para el error
-            <div className='px-3 py-2 text-sm font-medium text-amber-800 bg-amber-100 border border-amber-200 rounded-lg'>
+            <div className='px-4 py-3 text-sm font-medium text-red-200 bg-red-900/50 border border-red-800 rounded-lg'>
               {error}
             </div>
           )}
@@ -109,10 +107,9 @@ function Login ({ setIsAuthenticated, setUser }) {
             <button
               type='submit'
               disabled={loading}
-                            // CAMBIO: Paleta de colores para el botón principal
-              className='w-full py-3 mt-2 font-bold text-white bg-slate-700 rounded-lg hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300 transition-all duration-200 disabled:bg-slate-400'
+              className='w-full py-3 mt-6 font-semibold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-lg hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-4 focus:ring-red-500/30 transition-all duration-200 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed shadow-lg'
             >
-              {loading ? 'Iniciando...' : 'Iniciar Sesión'}
+              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </button>
           </div>
         </form>

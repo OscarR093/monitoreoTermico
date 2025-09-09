@@ -6,23 +6,23 @@ const SuccessModal = ({ isOpen, message, onConfirm }) => {
   if (!isOpen) return null
 
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-      <div className='bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl transform transition-all'>
+    <div className='fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50'>
+      <div className='bg-gray-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl transform transition-all border border-gray-700'>
         <div className='text-center'>
           {/* Ícono de éxito */}
-          <div className='mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4'>
-            <svg className='h-6 w-6 text-green-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <div className='mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-900/50 mb-4'>
+            <svg className='h-6 w-6 text-green-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
               <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M5 13l4 4L19 7' />
             </svg>
           </div>
 
-          <h3 className='text-lg font-medium text-gray-900 mb-4'>
+          <h3 className='text-lg font-medium text-gray-100 mb-4'>
             {message}
           </h3>
 
           <button
             onClick={onConfirm}
-            className='w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200'
+            className='w-full inline-flex justify-center py-3 px-4 border border-transparent shadow-sm text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-500/30 transition-all duration-200'
           >
             Aceptar
           </button>
@@ -119,23 +119,23 @@ const ForceUpdateProfile = ({ user }) => {
   }
 
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 font-sans'>
+    <div className='flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4 font-sans'>
       <SuccessModal
         isOpen={showSuccessModal}
         message='¡Datos actualizados correctamente! Serás redirigido al inicio de sesión.'
         onConfirm={handleSuccessConfirm}
       />
 
-      <div className='w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-xl'>
+      <div className='w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-2xl shadow-2xl border border-gray-700'>
         <div className='text-center space-y-2'>
-          <h2 className='text-3xl font-extrabold text-gray-900'>Actualiza tus datos</h2>
-          <p className='text-gray-600'>Por seguridad, debes actualizar tu información y contraseña antes de continuar.</p>
+          <h2 className='text-3xl font-extrabold text-gray-100'>Actualiza tus datos</h2>
+          <p className='text-gray-400'>Por seguridad, debes actualizar tu información y contraseña antes de continuar.</p>
         </div>
 
         <form onSubmit={handleSubmit} className='space-y-5'>
           <div className='space-y-4'>
             <div className='relative'>
-              <label htmlFor='username' className='block text-sm font-semibold text-gray-700 mb-1'>Usuario</label>
+              <label htmlFor='username' className='block text-sm font-medium text-gray-300 mb-2'>Usuario</label>
               <input
                 id='username'
                 name='username'
@@ -143,16 +143,16 @@ const ForceUpdateProfile = ({ user }) => {
                 value={form.username}
                 onChange={handleChange}
                 required
-                className='w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200'
+                className='w-full px-4 py-3 text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200'
                 placeholder={user.username}
               />
             </div>
 
             <div className='relative'>
-              <label htmlFor='password' className='block text-sm font-semibold text-gray-700 mb-1'>
+              <label htmlFor='password' className='block text-sm font-medium text-gray-300 mb-2'>
                 Nueva contraseña
                 {!validations.password && (
-                  <span className='text-red-600 text-xs ml-2'>Mínimo 6 caracteres</span>
+                  <span className='text-red-400 text-xs ml-2'>Mínimo 6 caracteres</span>
                 )}
               </label>
               <div className='relative'>
@@ -163,15 +163,15 @@ const ForceUpdateProfile = ({ user }) => {
                   value={form.password}
                   onChange={handleChange}
                   required
-                  className={`w-full px-4 py-3 pr-12 text-gray-900 bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
-                    validations.password ? 'border-gray-300 focus:ring-red-500' : 'border-red-300 focus:ring-red-500'
+                  className={`w-full px-4 py-3 pr-12 text-gray-100 bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
+                    validations.password ? 'border-gray-600 focus:ring-red-500 focus:border-red-500' : 'border-red-500 focus:ring-red-500'
                   }`}
                   placeholder='••••••••'
                   minLength={6}
                 />
                 <button
                   type='button'
-                  className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
+                  className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors'
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword
@@ -191,10 +191,10 @@ const ForceUpdateProfile = ({ user }) => {
             </div>
 
             <div className='relative'>
-              <label htmlFor='confirmPassword' className='block text-sm font-semibold text-gray-700 mb-1'>
+              <label htmlFor='confirmPassword' className='block text-sm font-medium text-gray-300 mb-2'>
                 Confirmar contraseña
                 {!validations.confirmPassword && (
-                  <span className='text-red-600 text-xs ml-2'>Las contraseñas no coinciden</span>
+                  <span className='text-red-400 text-xs ml-2'>Las contraseñas no coinciden</span>
                 )}
               </label>
               <div className='relative'>
@@ -205,14 +205,14 @@ const ForceUpdateProfile = ({ user }) => {
                   value={form.confirmPassword}
                   onChange={handleChange}
                   required
-                  className={`w-full px-4 py-3 pr-12 text-gray-900 bg-white border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
-                    validations.confirmPassword ? 'border-gray-300 focus:ring-red-500' : 'border-red-300 focus:ring-red-500'
+                  className={`w-full px-4 py-3 pr-12 text-gray-100 bg-gray-700 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
+                    validations.confirmPassword ? 'border-gray-600 focus:ring-red-500 focus:border-red-500' : 'border-red-500 focus:ring-red-500'
                   }`}
                   placeholder='••••••••'
                 />
                 <button
                   type='button'
-                  className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600'
+                  className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors'
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword
@@ -232,7 +232,7 @@ const ForceUpdateProfile = ({ user }) => {
             </div>
 
             <div className='relative'>
-              <label htmlFor='fullName' className='block text-sm font-semibold text-gray-700 mb-1'>Nombre completo</label>
+              <label htmlFor='fullName' className='block text-sm font-medium text-gray-300 mb-2'>Nombre completo</label>
               <input
                 id='fullName'
                 name='fullName'
@@ -240,13 +240,13 @@ const ForceUpdateProfile = ({ user }) => {
                 value={form.fullName}
                 onChange={handleChange}
                 required
-                className='w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200'
+                className='w-full px-4 py-3 text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200'
                 placeholder={user.fullName}
               />
             </div>
 
             <div className='relative'>
-              <label htmlFor='email' className='block text-sm font-semibold text-gray-700 mb-1'>Correo electrónico</label>
+              <label htmlFor='email' className='block text-sm font-medium text-gray-300 mb-2'>Correo electrónico</label>
               <input
                 id='email'
                 name='email'
@@ -254,13 +254,13 @@ const ForceUpdateProfile = ({ user }) => {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className='w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200'
+                className='w-full px-4 py-3 text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200'
                 placeholder={user.email}
               />
             </div>
 
             <div className='relative'>
-              <label htmlFor='cellPhone' className='block text-sm font-semibold text-gray-700 mb-1'>Teléfono</label>
+              <label htmlFor='cellPhone' className='block text-sm font-medium text-gray-300 mb-2'>Teléfono</label>
               <input
                 id='cellPhone'
                 name='cellPhone'
@@ -268,14 +268,14 @@ const ForceUpdateProfile = ({ user }) => {
                 value={form.cellPhone}
                 onChange={handleChange}
                 required
-                className='w-full px-4 py-3 text-gray-900 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200'
+                className='w-full px-4 py-3 text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200'
                 placeholder={user.cellPhone}
               />
             </div>
           </div>
 
           {error && (
-            <div className='p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm'>
+            <div className='p-4 rounded-lg bg-red-900/50 border border-red-800 text-red-200 text-sm'>
               <p className='font-medium'>{error}</p>
             </div>
           )}
@@ -283,7 +283,7 @@ const ForceUpdateProfile = ({ user }) => {
           <button
             type='submit'
             disabled={loading || showSuccessModal}
-            className='w-full py-4 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
+            className='w-full py-4 px-6 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none focus:ring-4 focus:ring-red-500/30'
           >
             {loading
               ? (
