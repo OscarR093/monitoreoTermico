@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 // --- ✅ CORRECCIÓN: Se ajusta la ruta de importación para api.js
 import api from '../services/api'
+import Header from './Header'
 
 // --- Iconos SVG ---
 const AddUserIcon = () => (
@@ -103,34 +104,38 @@ function UserManagement ({ user: currentUser }) {
   }
 
   const notificationColors = {
-    success: 'bg-red-600',
-    error: 'bg-red-800'
+    success: 'bg-green-600 border-green-700',
+    error: 'bg-red-600 border-red-700'
   }
 
-  if (loading) return <div className='flex items-center justify-center h-screen bg-gray-100 text-xl font-semibold'>Cargando...</div>
+  if (loading) return <div className='flex items-center justify-center h-screen bg-gray-900 text-xl font-semibold text-gray-100'>Cargando...</div>
 
   return (
-    <div className='min-h-screen bg-gray-100 font-sans p-4 sm:p-6 lg:p-8'>
-      <div className='max-w-6xl mx-auto'>
-        <div className='flex justify-between items-center mb-6'>
-          <h1 className='text-3xl font-bold text-slate-800'>Gestión de Usuarios</h1>
-          <button onClick={() => navigate('/')} className='bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors'>Volver</button>
-        </div>
-
+    <div className='min-h-screen bg-gray-900 font-sans'>
+      <Header 
+        title="Gestión de Usuarios"
+        user={currentUser}
+        showBackButton={true}
+      />
+      
+      <main className='flex-1 overflow-y-auto mt-20 p-4 sm:p-6 lg:p-8'>
+        <div className='max-w-6xl mx-auto'>
         {notification.message && (
-          <div className={`fixed bottom-5 right-5 z-50 rounded-lg p-4 text-white font-medium shadow-lg ${notificationColors[notification.type]}`}>
+          <div className={`fixed bottom-5 right-5 z-50 rounded-lg p-4 text-white font-medium shadow-lg border ${notificationColors[notification.type]}`}>
             {notification.message}
           </div>
         )}
 
         <div className='grid grid-cols-1 lg:grid-cols-5 gap-8'>
           <div className='lg:col-span-2'>
-            <div className='bg-white p-6 rounded-xl shadow-md sticky top-6'>
-              <h2 className='text-xl font-bold text-slate-700 border-b pb-3 mb-6 flex items-center gap-2'><AddUserIcon /> Agregar Nuevo Usuario</h2>
+            <div className='bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-2xl sticky top-6'>
+              <h2 className='text-xl font-bold text-gray-100 border-b border-gray-600 pb-3 mb-6 flex items-center gap-2'>
+                <AddUserIcon /> Agregar Nuevo Usuario
+              </h2>
               <form onSubmit={handleAddUser} className='space-y-4'>
                 <InputField label='Nombre de usuario' name='username' value={formData.username} onChange={handleInputChange} />
                 <div className="relative">
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>Contraseña</label>
+                  <label className='block text-sm font-medium text-gray-300 mb-2'>Contraseña</label>
                   <div className="relative">
                     <input
                       name='password'
@@ -138,12 +143,13 @@ function UserManagement ({ user: currentUser }) {
                       value={formData.password}
                       onChange={handleInputChange}
                       required
-                      className='w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500'
+                      className='w-full px-4 py-3 text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors'
+                      placeholder='Ingrese la contraseña'
                     />
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, showPassword: !prev.showPassword }))}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-800"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-200 transition-colors"
                     >
                       {formData.showPassword ? (
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -165,31 +171,35 @@ function UserManagement ({ user: currentUser }) {
                       name='admin'
                       checked={formData.admin}
                       onChange={handleInputChange}
-                      className='h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500'
+                      className='h-4 w-4 rounded border-gray-600 bg-gray-700 text-red-600 focus:ring-red-500 focus:ring-offset-gray-800'
                     />
-                    <label className='text-sm font-medium text-gray-700'>Conceder permisos de Administrador</label>
+                    <label className='text-sm font-medium text-gray-300'>Conceder permisos de Administrador</label>
                   </div>
                 )}
-                <button type='submit' disabled={isSubmitting} className='w-full flex justify-center items-center gap-2 mt-2 px-6 py-3 font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 transition-all duration-200 disabled:bg-red-400'>
+                <button 
+                  type='submit' 
+                  disabled={isSubmitting} 
+                  className='w-full flex justify-center items-center gap-2 mt-6 px-6 py-3 font-semibold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-lg hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-4 focus:ring-red-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg'
+                >
                   {isSubmitting ? <><SpinnerIcon /> Agregando...</> : 'Agregar Usuario'}
                 </button>
               </form>
             </div>
           </div>
 
-          <div className='lg:col-span-3 bg-white p-6 rounded-xl shadow-md'>
-            <h2 className='text-xl font-bold text-slate-700 border-b pb-3 mb-4'>Usuarios Registrados</h2>
+          <div className='lg:col-span-3 bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-2xl'>
+            <h2 className='text-xl font-bold text-gray-100 border-b border-gray-600 pb-3 mb-4'>Usuarios Registrados</h2>
             {users.length === 0 ? (
-              <p className='text-gray-500 mt-4'>No hay otros usuarios registrados.</p>
+              <p className='text-gray-400 mt-4'>No hay otros usuarios registrados.</p>
             ) : (
-              <ul className='divide-y divide-gray-200'>
+              <ul className='divide-y divide-gray-700'>
                 {users.map((u) => (
                     <li key={u.id} className='flex flex-col sm:flex-row justify-between items-start sm:items-center py-4'>
                       <div className='flex-grow text-left mb-2 sm:mb-0'>
-                          <p className='font-semibold text-slate-800 flex items-center gap-2 flex-wrap'>
+                          <p className='font-semibold text-gray-100 flex items-center gap-2 flex-wrap'>
                               {u.username}
                               <span className="text-gray-400 font-normal">({u.fullName || 'Sin nombre completo'})</span>
-                              {u.admin && <span className='text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full'>Admin</span>}
+                              {u.admin && <span className='text-xs font-bold text-white bg-red-600 px-2 py-0.5 rounded-full'>Admin</span>}
                           </p>
                         </div>
                       {/* --- ✅ CORRECCIÓN: Se revisa la lógica para que el botón de eliminar se muestre correctamente */}
@@ -197,7 +207,7 @@ function UserManagement ({ user: currentUser }) {
                           ? (
                               <button
                                   onClick={() => setUserToDelete(u)}
-                                  className='flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-colors w-full sm:w-auto text-red-700 bg-red-100 hover:bg-red-200'
+                                  className='flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-md transition-colors w-full sm:w-auto text-red-200 bg-red-900/50 hover:bg-red-800/70 border border-red-800'
                                 >
                                   <TrashIcon /> Eliminar
                                 </button>
@@ -209,19 +219,28 @@ function UserManagement ({ user: currentUser }) {
             )}
           </div>
         </div>
-      </div>
+        </div>
+      </main>
 
       {userToDelete && (
-        <div className='fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-lg shadow-xl p-6 w-full max-w-md'>
-            <h3 className='text-xl font-bold text-slate-800'>Confirmar Eliminación</h3>
+        <div className='fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4'>
+          <div className='bg-gray-800 border border-gray-700 rounded-lg shadow-2xl p-6 w-full max-w-md'>
+            <h3 className='text-xl font-bold text-gray-100'>Confirmar Eliminación</h3>
             {/* --- ✅ CAMBIO: El nombre que se muestra es el username --- */}
-            <p className='text-gray-600 my-4'>¿Estás seguro de que quieres eliminar al usuario <strong>{userToDelete.username}</strong>? Esta acción es irreversible.</p>
+            <p className='text-gray-300 my-4'>¿Estás seguro de que quieres eliminar al usuario <strong className='text-gray-100'>{userToDelete.username}</strong>? Esta acción es irreversible.</p>
             <div className='flex justify-end gap-4 mt-6'>
-              <button onClick={() => setUserToDelete(null)} disabled={isSubmitting} className='px-4 py-2 font-bold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50'>
+              <button 
+                onClick={() => setUserToDelete(null)} 
+                disabled={isSubmitting} 
+                className='px-4 py-2 font-semibold text-gray-300 bg-gray-700 border border-gray-600 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50'
+              >
                 Cancelar
               </button>
-              <button onClick={handleDeleteUser} disabled={isSubmitting} className='flex justify-center items-center gap-2 px-4 py-2 font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400 w-32'>
+              <button 
+                onClick={handleDeleteUser} 
+                disabled={isSubmitting} 
+                className='flex justify-center items-center gap-2 px-4 py-2 font-semibold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-lg hover:from-red-700 hover:to-red-800 transition-colors disabled:opacity-50 w-32 focus:outline-none focus:ring-4 focus:ring-red-500/30'
+              >
                 {isSubmitting ? <SpinnerIcon /> : 'Sí, eliminar'}
               </button>
             </div>
@@ -234,8 +253,13 @@ function UserManagement ({ user: currentUser }) {
 
 const InputField = ({ label, ...props }) => (
   <div>
-    <label className='block text-sm font-medium text-gray-700 mb-1'>{label}</label>
-    <input {...props} required className='w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500' />
+    <label className='block text-sm font-medium text-gray-300 mb-2'>{label}</label>
+    <input 
+      {...props} 
+      required 
+      className='w-full px-4 py-3 text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors' 
+      placeholder={`Ingrese ${label.toLowerCase()}`}
+    />
   </div>
 )
 

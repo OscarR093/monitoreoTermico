@@ -3,13 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import TechnicalGauge from './TechnicalGauge'
 import useWebSocket from '../services/webSocketService'
-import logo from '../assets/fagorlogo.png'
-
-const ArrowLeftIcon = () => (
-  <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
-    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M10 19l-7-7m0 0l7-7m-7 7h18' />
-  </svg>
-)
+import Header from './Header'
 
 const HistoryIcon = () => (
   <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
@@ -22,9 +16,8 @@ const EquipmentDetail = ({ onLogout, user }) => {
   const location = useLocation()
   const { equipmentName } = useParams()
   
-  // Estado para los datos del equipo y PLC
+  // Estado para los datos del equipo
   const [equipmentData, setEquipmentData] = useState([])
-  const [plcStatus, setPlcStatus] = useState('Inicializando...')
   
   // Obtenemos los datos iniciales del equipo desde el state de navegación
   const initialEquipment = location.state || { 
@@ -58,7 +51,7 @@ const EquipmentDetail = ({ onLogout, user }) => {
   }, [location.state])
 
   // Conectamos al WebSocket para recibir actualizaciones en tiempo real
-  useWebSocket(setEquipmentData, setPlcStatus)
+  useWebSocket(setEquipmentData, null)
 
   // Obtenemos los datos actuales del equipo específico
   const equipment = equipmentData.find(eq => eq.name === equipmentName) || initialEquipment
@@ -72,7 +65,17 @@ const EquipmentDetail = ({ onLogout, user }) => {
   }
 
   const isValidTemp = typeof equipment.temperature === 'number' && !isNaN(equipment.temperature)
-  const isPlcConnected = plcStatus.toLowerCase() === 'ok' || plcStatus.toLowerCase().includes('recibidos')
+
+  // Botón de historial para el header
+  const historyButton = (
+    <button 
+      onClick={handleViewHistory}
+      className='flex items-center gap-2 bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors'
+    >
+      <HistoryIcon />
+      <span className='hidden sm:inline'>Historial</span>
+    </button>
+  )
 
   const getStatusInfo = () => {
     if (!isValidTemp) {
@@ -140,39 +143,18 @@ const EquipmentDetail = ({ onLogout, user }) => {
 
   return (
     <div className='flex flex-col h-screen font-sans bg-gradient-to-br from-gray-900 via-gray-800 to-red-900 text-gray-100'>
-      {/* ================= HEADER ================= */}
-      <header className='bg-gray-900 border-b border-red-600 p-4 shadow-2xl flex justify-between items-center'>
-        <div className='flex items-center gap-4'>
-          <button 
-            onClick={handleGoBack}
-            className='flex items-center gap-2 text-gray-300 hover:text-gray-100 transition-colors'
-          >
-            <ArrowLeftIcon />
-            <span className='hidden sm:inline'>Volver al Dashboard</span>
-          </button>
-          <img src={logo} alt='Logo Fagor' className='h-10 w-auto filter brightness-110' />
-        </div>
-
-        <div className='flex-grow text-center'>
-          <h1 className='text-xl font-bold text-gray-100'>Detalle del Equipo</h1>
-          <span className={`text-xs font-medium ${isPlcConnected ? 'text-green-400' : 'text-red-400'}`}>
-            {plcStatus}
-          </span>
-        </div>
-
-        <div className='flex items-center gap-2'>
-          <button 
-            onClick={handleViewHistory}
-            className='flex items-center gap-2 bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors'
-          >
-            <HistoryIcon />
-            <span className='hidden sm:inline'>Historial</span>
-          </button>
-        </div>
-      </header>
+      {/* Header Component */}
+      <Header 
+        title="Detalle del Equipo"
+        user={user}
+        onLogout={onLogout}
+        showBackButton={true}
+        onBack={handleGoBack}
+        rightContent={historyButton}
+      />
 
       {/* ================= CONTENIDO PRINCIPAL ================= */}
-      <main className='flex-1 p-4 md:p-6 overflow-y-auto'>
+      <main className='flex-1 p-4 md:p-6 overflow-y-auto mt-20'>
         <div className='max-w-4xl mx-auto'>
           {/* Información del equipo */}
           <div className='bg-gray-800 border border-red-600/30 rounded-xl shadow-2xl p-6 mb-6'>
@@ -244,7 +226,6 @@ const EquipmentDetail = ({ onLogout, user }) => {
                 onClick={handleGoBack}
                 className='flex items-center justify-center gap-3 bg-gray-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors'
               >
-                <ArrowLeftIcon />
                 Volver al Dashboard
               </button>
             </div>

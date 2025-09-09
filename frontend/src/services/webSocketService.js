@@ -25,7 +25,7 @@ const useWebSocket = (setTabsData, setPlcStatus) => {
 
     const handleOpen = () => {
       console.log('Conectado al servidor WebSocket')
-      setPlcStatus('Conectado al servidor WebSocket')
+      if (setPlcStatus) setPlcStatus('Conectado al servidor WebSocket')
       ws.send('react-client')
     }
 
@@ -48,9 +48,9 @@ const useWebSocket = (setTabsData, setPlcStatus) => {
             })
           })
 
-          setPlcStatus('Datos PLC recibidos.')
+          if (setPlcStatus) setPlcStatus('Datos PLC recibidos.')
         } else if (message.type === 'status') { // Mantenemos la lógica para mensajes de estado
-          setPlcStatus(message.message)
+          if (setPlcStatus) setPlcStatus(message.message)
         } else {
           // Esto ya no debería ocurrir para los datos de temperatura
           console.warn('Mensaje con formato desconocido recibido:', message)
@@ -62,12 +62,12 @@ const useWebSocket = (setTabsData, setPlcStatus) => {
 
     const handleError = (error) => {
       console.error('Error en la conexión WebSocket:', error)
-      setPlcStatus('Error en la conexión WebSocket.')
+      if (setPlcStatus) setPlcStatus('Error en la conexión WebSocket.')
     }
 
     const handleClose = () => {
       console.log('Desconectado del servidor WebSocket.')
-      setPlcStatus('Desconectado del servidor. Reconectando...')
+      if (setPlcStatus) setPlcStatus('Desconectado del servidor. Reconectando...')
       setTimeout(() => {
         // La reconexión se manejará por el ciclo de vida del hook
       }, 3000)

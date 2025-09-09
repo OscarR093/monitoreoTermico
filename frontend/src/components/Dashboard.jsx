@@ -2,20 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useWebSocket from '../services/webSocketService'
-import logo from '../assets/fagorlogo.png'
-
-// --- Iconos SVG ---
-const MenuIcon = () => (
-  <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
-    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M4 6h16M4 12h16m-7 6h7' />
-  </svg>
-)
-
-const CloseIcon = () => (
-  <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'>
-    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M6 18L18 6M6 6l12 12' />
-  </svg>
-)
+import Header from './Header'
 
 // Componente para cada celda del dashboard
 const TemperatureCard = ({ equipment, onClick }) => {
@@ -104,10 +91,8 @@ const TemperatureCard = ({ equipment, onClick }) => {
 const Dashboard = ({ onLogout, user }) => {
   const navigate = useNavigate()
   const [equipmentData, setEquipmentData] = useState([])
-  const [plcStatus, setPlcStatus] = useState('Inicializando...')
-  const [mainMenuOpen, setMainMenuOpen] = useState(false)
 
-  const isPlcConnected = plcStatus.toLowerCase() === 'ok' || plcStatus.toLowerCase().includes('recibidos')
+  useWebSocket(setEquipmentData, null)
 
   useEffect(() => {
     const initialEquipment = [
@@ -123,75 +108,18 @@ const Dashboard = ({ onLogout, user }) => {
     setEquipmentData(initialEquipment)
   }, [])
 
-  useWebSocket(setEquipmentData, setPlcStatus)
-
-  const toggleMainMenu = () => setMainMenuOpen(!mainMenuOpen)
-
-  const handleNavigate = (path) => {
-    navigate(path)
-    setMainMenuOpen(false)
-  }
-
-  const handleLogoutClick = () => {
-    onLogout()
-    setMainMenuOpen(false)
-  }
-
   const handleEquipmentClick = (equipment) => {
     navigate(`/equipment-detail/${equipment.name}`, { state: equipment })
   }
 
   return (
     <div className='flex flex-col h-screen font-sans bg-gradient-to-br from-gray-900 via-gray-800 to-red-900 text-gray-100'>
-      {/* ================= HEADER ================= */}
-      <header className='bg-gray-900 border-b border-red-600 p-4 shadow-2xl flex justify-between items-center fixed top-0 left-0 w-full z-30'>
-        <div className='flex items-center gap-2'>
-          <div className='flex flex-col items-start'>
-            <img src={logo} alt='Logo Fagor' className='h-10 w-auto mr-20 filter brightness-110' />
-            <span className={`-mt-1 ml-1 px-2 py-0.5 rounded-full text-white font-semibold text-[10px] transition-colors sm:hidden ${isPlcConnected ? 'bg-red-600' : 'bg-gray-700'}`}>
-              {isPlcConnected ? 'Conectado' : 'Desconectado'}
-            </span>
-          </div>
-        </div>
-
-        <div className='hidden sm:flex flex-grow justify-center'>
-          <h1 className='text-xl font-bold text-center text-gray-100'>Dashboard de Temperaturas</h1>
-        </div>
-
-        <div className='flex items-center gap-4'>
-          <span className={`hidden sm:inline-block px-3 py-1 rounded-full text-white font-semibold text-sm transition-colors ${isPlcConnected ? 'bg-red-600' : 'bg-gray-700'}`}>
-            {plcStatus}
-          </span>
-          <nav className='hidden md:flex items-center gap-3'>
-            <button onClick={() => handleNavigate('/settings')} className='bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors'>Ajustes</button>
-            {user?.admin && (
-              <button onClick={() => handleNavigate('/admin/users')} className='bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors'>Gestión</button>
-            )}
-            <button onClick={handleLogoutClick} className='bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors'>Cerrar Sesión</button>
-          </nav>
-          <div className='md:hidden'>
-            <button onClick={toggleMainMenu} className='text-gray-300 focus:outline-none p-2'>
-              <MenuIcon />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* --- Panel de Menú Móvil --- */}
-      <div className={`fixed inset-0 bg-black bg-opacity-70 z-40 transition-opacity md:hidden ${mainMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={toggleMainMenu} />
-      <div className={`fixed top-0 right-0 h-full w-64 bg-gray-900 border-l border-red-600 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out md:hidden ${mainMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className='p-4'>
-          <button onClick={toggleMainMenu} className='absolute top-4 right-4 text-gray-400 hover:text-gray-200'><CloseIcon /></button>
-          <h2 className='text-lg font-bold mb-6 mt-2 text-gray-100'>Menú</h2>
-          <nav className='flex flex-col gap-4'>
-            <button onClick={() => handleNavigate('/settings')} className='w-full text-left bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors'>Ajustes</button>
-            {user?.admin && (
-              <button onClick={() => handleNavigate('/admin/users')} className='w-full text-left bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors'>Gestión</button>
-            )}
-            <button onClick={handleLogoutClick} className='w-full text-left bg-gray-700 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors'>Cerrar Sesión</button>
-          </nav>
-        </div>
-      </div>
+      {/* Header Component */}
+      <Header 
+        title="Dashboard de Temperaturas"
+        user={user}
+        onLogout={onLogout}
+      />
 
       {/* ================= DASHBOARD GRID ================= */}
       <main className='flex-1 w-full mt-20 p-4 md:p-6 overflow-y-auto'>
