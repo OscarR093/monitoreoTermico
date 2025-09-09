@@ -1,3 +1,17 @@
+/* Definición de fuente DS-Digital para displays */
+@font-face {
+  font-family: 'DS-Digital';
+  src: url('./fonts/DS-Digital.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Clase CSS para simular DS-Digital mientras se carga el archivo */
+.ds-digital-display {
+  font-family: 'DS-Digital', 'Orbitron', 'Share Tech Mono', monospace;
+  font-feature-settings: 'tnum' 1; /* Números tabulares para ancho fijo */
+}
+
 /* Mejorar la fuente del valor dentro del gauge */
 .gauge-chart-text {
   font-size: 3rem !important;
