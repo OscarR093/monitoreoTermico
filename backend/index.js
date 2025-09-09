@@ -153,14 +153,18 @@ app.post('/api/login', async (req, res) => {
   try {
     const user = await UserRepository.login({ username, password })
 
-    // --- ✅ AJUSTE CRUCIAL AQUÍ ---
-    // Añade 'isSuperAdmin: user.isSuperAdmin' al objeto del token
     const token = jwt.sign(
-      { id: user.id, username: user.username, fullName: user.fullName, admin: user.admin, isSuperAdmin: user.isSuperAdmin },
+      {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        admin: user.admin,
+        isSuperAdmin: user.isSuperAdmin,
+        mustChangePassword: user.mustChangePassword
+      },
       JWT_SECRET,
       { expiresIn: '1h' }
     )
-    // --- FIN DEL AJUSTE ---
 
     res.cookie('access_token', token, {
       httpOnly: true,
@@ -189,30 +193,25 @@ app.get('/api/users/:id', authenticateToken, async (req, res) => {
 
 app.put('/api/users/:id', authenticateToken, async (req, res) => {
   try {
-    const { username, email, fullName, admin, password, cellPhone, mustChangePassword } = req.body
-
     if (req.user.id !== req.params.id && !req.user.admin) {
       return res.status(403).json({ message: 'Acceso denegado' })
     }
 
-    const updateData = {
-      username,
-      email,
-      fullName,
-      admin,
-      password,
-      cellPhone,
-      mustChangePassword
+    // Si hay una contraseña nueva, forzamos mustChangePassword a false
+    if (req.body.password) {
+      req.body.mustChangePassword = false
     }
 
-    if (password) {
-      updateData.mustChangePassword = false
-    }
-
-    const updatedUser = await UserRepository.updateUserById(req.params.id, updateData)
+    const updatedUser = await UserRepository.updateUserById(req.params.id, req.body)
     res.json(updatedUser)
   } catch (error) {
-    res.status(400).json({ message: error.message })
+    // Manejo de errores específicos
+    const status = error.status || 400
+    const message = status === 409
+      ? 'El correo electrónico o nombre de usuario no está disponible'
+      : error.message || 'Error al actualizar el usuario'
+
+    res.status(status).json({ message })
   }
 })
 
@@ -307,6 +306,7 @@ app.post('/api/register', authenticateToken, authorizeAdmin, async (req, res) =>
 })
 
 app.get('/api/auth/check', authenticateToken, (req, res) => {
+  console.log('Usuario autenticado:', req.user)
   res.status(200).json({ user: req.user })
 })
 
