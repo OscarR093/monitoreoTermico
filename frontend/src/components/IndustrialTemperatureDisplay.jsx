@@ -78,7 +78,7 @@ const IndustrialTemperatureDisplay = ({
       <div className="relative flex items-center">
         <div 
           className="
-            text-5xl font-bold px-4 py-3 
+            text-6xl font-bold px-4 py-3 
             bg-black border-2 border-gray-600 rounded-md
             shadow-inner tracking-wider relative
           "
