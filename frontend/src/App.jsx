@@ -1,10 +1,11 @@
 // src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import TabsComponent from './Tabs'
+import Dashboard from './components/Dashboard'
 import Login from './Login'
 import Settings from './components/Settings'
 import UserManagement from './components/UserManagement'
 import HistoryPage from './components/HistoryPage'
+import EquipmentDetail from './components/EquipmentDetail'
 import ForceUpdateProfile from './components/ForceUpdateProfile'
 import './index.css'
 import { useState, useEffect } from 'react'
@@ -76,7 +77,7 @@ function App () {
           path='/'
           element={
             <ProtectedRoute>
-              <TabsComponent onLogout={handleLogout} user={user} />
+              <Dashboard onLogout={handleLogout} user={user} />
             </ProtectedRoute>
           }
         />
@@ -102,6 +103,15 @@ function App () {
           element={
             <ProtectedRoute>
               <HistoryPage onLogout={handleLogout} user={user} />
+            </ProtectedRoute>
+          }
+        />
+        {/* --- NUEVA RUTA PARA DETALLE DE EQUIPO --- */}
+        <Route
+          path='/equipment-detail/:equipmentName'
+          element={
+            <ProtectedRoute>
+              <EquipmentDetail onLogout={handleLogout} user={user} />
             </ProtectedRoute>
           }
         />
