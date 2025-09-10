@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ----------------------------------------------------
   # Traefik (Manejando HTTPS y MQTTS)
@@ -33,7 +31,7 @@ services:
   # Aplicación Node.js (sin cambios)
   # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:2.6
+    image: oscarr093/monitoreotermico:2.5
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     depends_on:
