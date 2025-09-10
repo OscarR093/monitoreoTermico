@@ -3,7 +3,7 @@ import { SALT_ROUNDS } from './config.js'
 import User from './models/user-model.js'
 
 export class UserRepository {
-  static async create ({ username, password, email, fullName, admin = false }) {
+  static async create ({ username, password, email, fullName, admin = false, isSuperAdmin = false, cellPhone, mustChangePassword }) {
     Validation.username(username)
     Validation.password(password)
     Validation.email(email)
@@ -19,7 +19,10 @@ export class UserRepository {
       password: hashedPassword,
       email,
       fullName,
-      admin
+      admin,
+      isSuperAdmin,
+      cellPhone,
+      mustChangePassword
     })
     const savedUser = await newUser.save()
 
