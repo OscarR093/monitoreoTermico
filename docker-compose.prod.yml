@@ -33,9 +33,12 @@ services:
   # Aplicación Node.js (sin cambios)
   # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:2.2
+    image: oscarr093/monitoreotermico:2.3
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
     environment:
       - MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017/${MONGO_DB_NAME}?authSource=admin
       - MQTT_BROKER_URL=mqtt://emqx
@@ -69,6 +72,12 @@ services:
       - datos-mongo:/data/db
     networks:
       - mi-red
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # ----------------------------------------------------
   # Broker EMQX (Corregido)
