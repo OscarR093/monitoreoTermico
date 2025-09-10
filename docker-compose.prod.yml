@@ -33,7 +33,7 @@ services:
   # Aplicación Node.js (sin cambios)
   # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:2.4
+    image: oscarr093/monitoreotermico:2.5
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     depends_on:
@@ -73,7 +73,7 @@ services:
     networks:
       - mi-red
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
       interval: 10s
       timeout: 5s
       retries: 5

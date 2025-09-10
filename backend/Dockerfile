@@ -1,5 +1,5 @@
 # --- Etapa 1: "Frontend Builder" ---
-FROM node:24-alpine3.21 AS frontend-builder
+FROM node:24-slim AS frontend-builder
 WORKDIR /usr/src/app
 # Corregido: Especificamos la ruta al package.json del frontend
 COPY frontend/package*.json ./
@@ -10,8 +10,14 @@ RUN npm run build
 
 
 # --- Etapa 2: "Backend Builder" ---
-FROM node:24-alpine3.21 AS backend-builder
+FROM node:24-slim AS backend-builder
 WORKDIR /usr/src/app
+# Instalar dependencias necesarias para compilar módulos nativos
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 # Corregido: Especificamos la ruta al package.json del backend
 COPY backend/package*.json ./
 RUN npm install
@@ -20,8 +26,7 @@ COPY backend/ ./
 
 
 # --- Etapa 3: "Production" ---
-FROM node:24-alpine3.21
-RUN apk add --no-cache libc6-compat
+FROM node:24-slim
 WORKDIR /usr/src/app
 
 # Copiamos las dependencias del backend
