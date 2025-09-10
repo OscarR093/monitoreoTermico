@@ -21,6 +21,7 @@ COPY backend/ ./
 
 # --- Etapa 3: "Production" ---
 FROM node:24-alpine3.21
+RUN apk add --no-cache libc6-compat
 WORKDIR /usr/src/app
 
 # Copiamos las dependencias del backend
