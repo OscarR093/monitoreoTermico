@@ -73,8 +73,8 @@ const createSuperUserOnStartup = async () => {
       console.log('La base de datos ya tiene usuarios. No se creará el super usuario.')
       return
     }
-    const username = process.env.SUPER_USER_USERNAME
-    const password = process.env.SUPER_USER_PASSWORD
+    const username = process.env.SUPER_USER_USERNAME // || 'suSuperUserperadmin'
+    const password = process.env.SUPER_USER_PASSWORD // || 'superadmin123'
     if (!username || !password) {
       console.log('Variables de entorno para super usuario no definidas. Omitiendo creación.')
       return
