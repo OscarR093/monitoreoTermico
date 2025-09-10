@@ -10,6 +10,20 @@ import connectDB from './db/db.js'
 import path from 'path'
 import { getHistoryModel } from './models/thermocouple-history.js'
 import User from './models/user-model.js'
+
+// --- CAPTURA GLOBAL DE ERRORES ---
+process.on('uncaughtException', (err, origin) => {
+  console.error('<<<<< UNCAUGHT EXCEPTION >>>>>')
+  console.error(`Caught exception: ${err}\n` + `Exception origin: ${origin}`)
+  console.error('Stack:', err.stack)
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('<<<<< UNHANDLED REJECTION >>>>>')
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+})
+
 // import { Types } from 'mongoose'
 
 const app = express()
