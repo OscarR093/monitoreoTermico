@@ -8,6 +8,7 @@ export class UserRepository {
     Validation.password(password)
     Validation.email(email)
     Validation.fullName(fullName)
+    if (cellPhone) Validation.cellPhone(cellPhone)
 
     const existingUser = await User.findOne({ username })
     if (existingUser) throw new Error(`${username} already exists`)
@@ -161,6 +162,10 @@ class Validation {
   static fullName (fullName) {
     if (typeof fullName !== 'string') throw new Error('FullName must be a String')
     if (fullName.length < 2) throw new Error('FullName must be at least 2 characters long')
+  }
+
+  static cellPhone (cellPhone) {
+    if (typeof cellPhone !== 'string') throw new Error('cellPhone must be a string')
   }
 
   static validateEmail (email) {
