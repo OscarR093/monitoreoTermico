@@ -47,7 +47,7 @@ const IndustrialTemperatureDisplay = ({
   // Formatear la temperatura para el display - manejar diferentes tipos de datos
   const formatTemperature = (temp) => {
     // Si no está activo o no hay datos válidos, mostrar guiones
-    if (!isReallyActive) return '---.-'
+    if (!isReallyActive) return '---'
     
     // Si es un número válido, formatearlo
     if (typeof temp === 'number' && !isNaN(temp) && temp > 0) {

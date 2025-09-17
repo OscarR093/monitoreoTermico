@@ -1,7 +1,7 @@
 // src/components/Header.jsx
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import logo from '../assets/fagorlogo.png'
+import logo from '../assets/logo.png'
 
 // --- Iconos SVG ---
 const MenuIcon = () => (

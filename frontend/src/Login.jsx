@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from './services/api'
-import logo from './assets/fagorlogo.png' // Asegúrate que la ruta al logo es correcta
+import logo from './assets/logo.png' // Asegúrate que la ruta al logo es correcta
 
 // --- Iconos SVG para el campo de contraseña ---
 const EyeIcon = () => (

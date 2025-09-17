@@ -51,7 +51,7 @@ const EmptyState = () => (
   </div>
 )
 
-const HistoryPage = () => {
+const HistoryPage = ({ onLogout, user }) => {
   const { nombreEquipo } = useParams()
   const navigate = useNavigate()
   const [historyData, setHistoryData] = useState([])
@@ -64,7 +64,9 @@ const HistoryPage = () => {
       try {
         setLoading(true)
         const data = await api.get(`/thermocouple-history/${encodeURIComponent(nombreEquipo)}`)
-        setHistoryData(data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))) // Ordenar por fecha
+        // Los datos ya vienen ordenados desde el backend (más recientes primero)
+        // Para el gráfico necesitamos orden cronológico, para la tabla el orden actual
+        setHistoryData(data)
       } catch (err) {
         setError('No se pudo cargar el historial. Intente de nuevo más tarde.')
         console.error(err)
@@ -77,11 +79,14 @@ const HistoryPage = () => {
 
   const handleBack = () => navigate('/')
 
+  // Datos ordenados cronológicamente para el gráfico (más antiguos a la izquierda)
+  const chartDataSorted = [...historyData].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+
   const chartData = {
-    labels: historyData.map(data => new Date(data.timestamp).toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit' })),
+    labels: chartDataSorted.map(data => new Date(data.timestamp).toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit' })),
     datasets: [{
       label: `Temperatura (°C) de ${nombreEquipo}`,
-      data: historyData.map(data => data.temperatura),
+      data: chartDataSorted.map(data => data.temperatura),
       borderColor: '#dc2626', // red-600
       backgroundColor: 'rgba(220, 38, 38, 0.1)', // red-600 con opacidad
       fill: true,
@@ -145,6 +150,8 @@ const HistoryPage = () => {
     <div className='min-h-screen font-sans bg-gray-900 text-gray-100'>
       <Header 
         title={`Historial: ${nombreEquipo}`}
+        user={user}
+        onLogout={onLogout}
         showBackButton={true}
       />
 

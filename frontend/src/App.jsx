@@ -93,7 +93,7 @@ function App () {
           path='/admin/users'
           element={
             <ProtectedRoute adminOnly>
-              <UserManagement user={user} />
+              <UserManagement user={user} onLogout={handleLogout} />
             </ProtectedRoute>
           }
         />

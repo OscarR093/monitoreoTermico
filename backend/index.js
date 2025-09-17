@@ -350,7 +350,6 @@ app.get('/api/env', (req, res) => {
 })
 
 // Endpoint GET para obtener el historial (protegido con JWT para el frontend)
-// Endpoint GET para obtener el historial (protegido con JWT para el frontend)
 app.get('/api/thermocouple-history/:nombre', authenticateToken, async (req, res) => {
   const nombreEquipo = req.params.nombre
 
@@ -358,14 +357,19 @@ app.get('/api/thermocouple-history/:nombre', authenticateToken, async (req, res)
     // 1. Obtenemos el modelo dinámico para el equipo solicitado
     const HistoryModel = getHistoryModel(nombreEquipo)
 
-    // 2. La consulta ahora es mucho más simple y directa
-    const historyData = await HistoryModel.find({})
+    // 2. Calculamos la fecha de hace 24 horas
+    const twentyFourHoursAgo = new Date()
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
+
+    // 3. Consulta filtrada por las últimas 24 horas
+    const historyData = await HistoryModel.find({
+      timestamp: { $gte: twentyFourHoursAgo } // Solo registros de las últimas 24 horas
+    })
       .sort({ timestamp: -1 }) // Ordena por fecha, los más nuevos primero
-      .limit(24) // Limita a los últimos 24 registros
       .select('temperatura timestamp -_id') // Selecciona solo los campos que necesitas
 
     if (historyData.length === 0) {
-      return res.status(404).json({ message: 'No se encontraron registros para este equipo' })
+      return res.status(404).json({ message: 'No se encontraron registros para este equipo en las últimas 24 horas' })
     }
 
     res.status(200).json(historyData)
