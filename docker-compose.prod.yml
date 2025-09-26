@@ -104,6 +104,8 @@ services:
 
 networks:
   mi-red:
+    external: true
+    name: monitoreotermico_mi-red
 
 volumes:
   datos-mongo: {}
