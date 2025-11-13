@@ -1,136 +1,321 @@
-# Monitoreo Térmico IIoT 🌡️
-Este proyecto es una aplicación de Internet Industrial de las Cosas (IIoT) diseñada para el monitoreo de temperatura en tiempo real y el almacenamiento de datos históricos, utilizando un stack de tecnologías modernas y seguras.
+# Sistema de Monitoreo Térmico Industrial (IIoT) 🌡️
+
+Sistema de monitoreo térmico en tiempo real para la industria manufacturera, especialmente diseñado para el control de procesos térmicos en plantas como FAGOR EDERLAN MEXICO. El sistema captura datos de temperatura desde sensores de termopares conectados a un PLC, procesa la información y proporciona interfaces para visualización, análisis y control.
+
+## 📋 Tabla de Contenidos
+
+- [Descripción General](#descripción-general)
+- [Arquitectura del Sistema](#arquitectura-del-sistema)
+- [Tecnologías Utilizadas](#tecnologías-utilizadas)
+- [Flujo de Datos](#flujo-de-datos)
+- [Despliegue en Producción](#despliegue-en-producción)
+- [Configuración del Entorno](#configuración-del-entorno)
+- [Configuración de Docker Compose Producción](#configuración-de-docker-compose-producción)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Licencia](#licencia)
+
 ## 📝 Descripción General
-La aplicación captura datos de temperatura desde un Gateway (Python) conectado a 8 sensores de termopares en un PLC. Estos datos se envían de forma segura mediante el protocolo MQTTS a un broker EMQX. Un backend en Node.js procesa los datos de los siguientes tópicos:
 
-**Tiempo Real**: Datos leídos cada 2 segundos y retransmitidos vía WebSocket para visualización instantánea en la interfaz.
-**Histórico**: Datos almacenados cada 20 minutos en una base de datos MongoDB.
-Control: Comandos enviados desde el backend al gateway para activar o desactivar el flujo de datos en tiempo real.
+El sistema de monitoreo térmico es una aplicación completa de Internet Industrial de las Cosas (IIoT) que permite:
 
-La información se presenta al usuario a través de un frontend interactivo desarrollado en React.
+- **Lectura en tiempo real**: Captura de datos de temperatura cada 2 segundos desde sensores conectados a un PLC
+- **Almacenamiento histórico**: Datos guardados cada 20 minutos en base de datos MongoDB para análisis
+- **Visualización en tiempo real**: Interfaz web con actualización instantánea de temperaturas
+- **Control remoto**: Activación y desactivación del flujo de datos térmicos
+- **Autenticación y autorización**: Sistema de usuarios con roles de administrador
+- **Seguridad SSL/TLS**: Comunicación cifrada mediante MQTTS y HTTPS
+
+El sistema está diseñado para operar en entornos industriales con requisitos de alta disponibilidad y seguridad, permitiendo el monitoreo continuo de procesos térmicos críticos.
+
+## 🏗️ Arquitectura del Sistema
+
+La arquitectura del sistema se compone de los siguientes componentes:
+
+```
+[Sensores Termopares] → [PLC] → [Gateway Python] → [MQTTS Broker EMQX] → [Node.js Backend] → [MongoDB] → [Frontend React]
+```
+
+### Componentes Principales:
+
+- **Gateway (Python)**: Interfaz entre el PLC y el sistema IIoT, lectura de datos de termopares
+- **Broker EMQX**: Gestión de mensajes MQTT con soporte para MQTTS (SSL/TLS)
+- **Backend Node.js**: Procesamiento de datos, autenticación JWT y WebSocket real-time
+- **Base de Datos MongoDB**: Almacenamiento de datos históricos de temperatura
+- **Frontend React**: Interfaz de usuario web moderna con visualización en tiempo real
+- **Traefik**: Proxy inverso con certificados SSL Let's Encrypt
+
 ## ⚙️ Tecnologías Utilizadas
 
-| Área               | Tecnología                      |
-|--------------------|---------------------------------|
-| Frontend           | React, Vite                     |
-| Backend            | Node.js, Express, WebSockets    |
-| Base de Datos      | MongoDB                         |
-| Broker de Mensajes | EMQX (MQTT)                     |
-| Gateway            | Python                          |
-| Despliegue         | Docker, Docker Compose, Traefik |
+| Componente | Tecnología | Versión |
+|------------|------------|---------|
+| Frontend | React, Vite | Moderno |
+| Backend | Node.js, Express | ES6+ |
+| WebSockets | ws | Latest |
+| Base de Datos | MongoDB Community Server | 7.0 |
+| Broker Mensajes | EMQX | 5.7.0 |
+| Gateway | Python | 3.x |
+| Despliegue | Docker, Docker Compose | Latest |
+| Proxy Inverso | Traefik | v3.1 |
+| Protocolo Comunicación | MQTT/MQTTS | Standard |
 
+## 🔄 Flujo de Datos
 
-# 🚀 Guía de Despliegue Rápido
-Esta guía describe cómo desplegar la aplicación en un servidor de producción. El repositorio de código y la imagen de Docker son privados.
+El sistema opera en tres modos principales:
 
-## 📋 Prerrequisitos
+1. **Tiempo Real**: Datos leídos cada 2 segundos y retransmitidos vía WebSocket para visualización instantánea
+2. **Histórico**: Datos almacenados cada 20 minutos en MongoDB para análisis posterior
+3. **Control**: Comandos de activación/desactivación enviados desde el backend al gateway
 
-Un servidor o VPS (ej. Ubuntu 22.04) con una IP pública y acceso sudo.
-Un nombre de dominio (ej. midominio.com) configurado en el DNS para apuntar a la IP del servidor.
-Acceso al repositorio privado en GitHub (OscarR093/monitoreoTermico).
-Acceso a la imagen privada en Docker Hub (oscarr093/monitoreotermico).
-Git, Docker y Docker Compose instalados en el servidor.
+El flujo comienza con la lectura de sensores en el PLC, pasa por el gateway Python que envía la información al broker EMQX mediante MQTTS, donde el backend Node.js procesa los datos y los distribuye según sea necesario.
 
-## 🛠️ Paso 1: Clonar el Repositorio
-Clona el repositorio privado desde GitHub:
-git clone git@github.com:OscarR093/monitoreoTermico.git
-cd monitoreoTermico
+## 🚀 Despliegue en Producción
 
+### Requisitos del Sistema
 
-Nota: Asegúrate de tener configurada una clave SSH en tu servidor con acceso al repositorio privado en GitHub.
+- Servidor o VPS (Ubuntu 22.04 o similar) con IP pública y acceso sudo
+- Nombre de dominio configurado en DNS apuntando a la IP del servidor
+- Acceso a repositorio privado en GitHub y imagen en Docker Hub
+- Git, Docker y Docker Compose instalados
 
-## 🔧 Paso 2: Configurar el Entorno
-Crea y configura el archivo .env:
+## 🔧 Configuración del Entorno
+
+### Variables de Entorno
+
+Copia y completa el archivo `.env` con tus credenciales:
+
+```bash
 cp .env.example .env
-nano .env
+```
 
-Edita .env con tus credenciales y configuración, incluyendo:
+**Parámetros requeridos:**
 
-DOMAIN_URL: Tu dominio (ej. midominio.com).
-LETSENCRYPT_EMAIL: Correo para Let's Encrypt.
-Credenciales para MongoDB, EMQX y JWT.
+- `DOMAIN_URL`: Dominio del sistema (ej. midominio.com)
+- `LETSENCRYPT_EMAIL`: Email para certificados SSL
+- `MONGO_USER` / `MONGO_PASS`: Credenciales MongoDB
+- `MOSQUITTO_USER` / `MOSQUITTO_PASS`: Credenciales EMQX
+- `JWT_SECRET`: Secreto para tokens JWT (cadena segura)
+- `EMQX_NODE_COOKIE`: Clave para comunicación entre nodos EMQX
+- `SUPER_USER_USERNAME` / `SUPER_USER_PASSWORD`: Credenciales de super usuario
 
----
+### Preparación del Despliegue
 
-# 🔌 Instalación del Gateway (PLC)
-Para el gateway es necesario crear un archivo `.env` en la carpeta `gateway` con la siguiente configuración:
+1. **Clonar el repositorio:**
+   ```bash
+   git clone git@github.com:OscarR093/monitoreoTermico.git
+   cd monitoreoTermico
+   ```
+
+2. **Configurar entorno:**
+   ```
+   cp .env.example .env
+   # Editar .env con credenciales reales
+   ```
+
+3. **Preparar volúmenes para Traefik:**
+   ```bash
+   mkdir traefik-data
+   touch traefik-data/acme.json
+   chmod 600 traefik-data/acme.json
+   ```
+
+4. **Iniciar sesión en Docker Hub:**
+   ```bash
+   docker login
+   ```
+
+5. **Levantar servicios:**
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d
+   ```
+
+### Verificación
+
+- Verificar contenedores: `docker ps`
+- Revisar logs de Traefik: `docker logs mi-traefik-proxy`
+- Acceder a la aplicación: `https://<TU_DOMINIO>`
+
+## 📦 Configuración de Docker Compose Producción
+
+El archivo `docker-compose.prod.yml` define la configuración de producción con los siguientes servicios:
+
+```yaml
+services:
+  # ----------------------------------------------------
+  # Traefik (Manejando HTTPS y MQTTS)
+  # ----------------------------------------------------
+  traefik:
+    image: traefik:v3.1
+    container_name: mi-traefik-proxy
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.mqtts.address=:8883"
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8883:8883"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik-data:/data
+    networks:
+      - mi-red
+
+  # ----------------------------------------------------
+  # Aplicación Node.js (sin cambios)
+  # ----------------------------------------------------
+  node-app:
+    image: oscarr093/monitoreotermico:2.5
+    container_name: mi-aplicacion-nodejs
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017/${MONGO_DB_NAME}?authSource=admin
+      - MQTT_BROKER_URL=mqtt://emqx
+      - MQTT_USER=${MOSQUITTO_USER}
+      - MQTT_PASS=${MOSQUITTO_PASS}
+      - JWT_SECRET=${JWT_SECRET}
+      - DOMAIN_URL=${DOMAIN_URL}
+      - NODE_ENV=production
+      - SUPER_USER_USERNAME=${SUPER_USER_USERNAME}
+      - SUPER_USER_PASSWORD=${SUPER_USER_PASSWORD}
+    networks:
+      - mi-red
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.node-app.rule=Host(`${DOMAIN_URL}`)"
+      - "traefik.http.routers.node-app.entrypoints=websecure"
+      - "traefik.http.routers.node-app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.node-app.loadbalancer.server.port=3000"
+
+  # ----------------------------------------------------
+  # Base de Datos MongoDB (sin cambios)
+  # ----------------------------------------------------
+  mongodb:
+    image: mongodb/mongodb-community-server:7.0-ubi8
+    container_name: mi-database-mongo
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
+    volumes:
+      - datos-mongo:/data/db
+    networks:
+      - mi-red
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------
+  # Broker EMQX (Corregido)
+  # ----------------------------------------------------
+  emqx:
+    image: emqx/emqx:5.7.0
+    container_name: mi-broker-emqx
+    restart: unless-stopped
+    environment:
+      - "EMQX_LISTENERS__TCP__DEFAULT__BIND=1883"
+      - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
+      - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
+      - "EMQX_NODE__COOKIE=${EMQX_NODE_COOKIE}"
+    ports:
+      - "1883:1883" # Opcional, para pruebas en la red local sin SSL
+      - "18083:18083" # Dashboard de EMQX
+    networks:
+      - mi-red
+    labels:
+      - "traefik.enable=true"
+      # --- ✅ Corrección: Usar el dominio definido en DOMAIN_URL ---
+      - "traefik.tcp.routers.emqx-secure.rule=HostSNI(`${DOMAIN_URL}`)"
+      - "traefik.tcp.routers.emqx-secure.entrypoints=mqtts"
+      - "traefik.tcp.routers.emqx-secure.tls.certresolver=letsencrypt"
+      - "traefik.tcp.services.emqx-secure.loadbalancer.server.port=1883"
+
+networks:
+  mi-red:
+    external: true
+    name: monitoreotermico_mi-red
+
+volumes:
+  datos-mongo: {}
+```
+
+La configuración incluye:
+
+- **Traefik**: Proxy inverso con soporte para HTTPS y MQTTS, gestión automática de certificados SSL Let's Encrypt
+- **Node App**: Aplicación principal que procesa datos térmicos y gestiona autenticación
+- **MongoDB**: Base de datos para almacenamiento de datos históricos con health check
+- **EMQX**: Broker MQTT con autenticación y soporte para conexiones seguras MQTTS
+
+## 🔌 Configuración del Gateway (PLC)
+
+El gateway Python requiere un archivo `.env` en la carpeta `gateway/` con la siguiente configuración:
 
 ```ini
-# .env (ejemplo para producción)
+# Configuración del PLC
 PLC_IP=192.168.0.1
 PLC_RACK=0
 PLC_SLOT=1
 PLC_DB_NUMBER=1
 PLC_DB_SIZE=54
+
+# Configuración MQTT
 MQTT_BROKER_HOST=tudominio.com
 MQTT_BROKER_PORT=8883
 MQTT_USER=usuario
 MQTT_PASSWORD=contraseña
+
+# Tópicos MQTT
 TOPIC_HISTORY_BASE=plcTemperaturas/historial/{equipo}
 TOPIC_REALTIME_BASE=plcTemperaturas/tiemporeal/{equipo}
 TOPIC_CONTROL=gatewayTemperaturas/control/tiemporeal
+
+# Intervalos de tiempo
 HISTORY_INTERVAL_SECONDS=1200
 REALTIME_INTERVAL_SECONDS=2
+
+# Reintentos MQTT
 MQTT_RECONNECT_MIN_DELAY=1
 MQTT_RECONNECT_MAX_DELAY=120
 MQTT_CONNECTION_RETRIES=5
 ```
 
-Puedes copiar el archivo `.env.example` y completarlo según tu entorno. El script del gateway cargará automáticamente estas variables al iniciar.
+## 📁 Estructura del Proyecto
 
-- Desbloquea el puerto 201 (o el que corresponda) en el firewall para conexiones S7.
-- Haz el script del gateway ejecutable y configúralo como servicio de sistema con systemctl.
-
-Ejemplo para habilitar el script como servicio:
-```bash
-sudo chmod +x /ruta/al/gateway_plc.py
-sudo cp gateway/gateway_plc.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable gateway_plc
-sudo systemctl start gateway_plc
 ```
-Asegúrate de que el archivo de servicio apunte correctamente al script y usuario deseado.
-
-## 📁 Paso 3: Preparar Volúmenes para Traefik
-Crea la carpeta y el archivo para los certificados SSL de Traefik:
-mkdir traefik-data
-touch traefik-data/acme.json
-chmod 600 traefik-data/acme.json
-
-## 🔑 Paso 4: Iniciar Sesión en Docker Hub
-Inicia sesión en Docker Hub para acceder a la imagen privada:
-docker login
-
-Ingresa tu usuario y contraseña de Docker Hub con permisos para oscarr093/monitoreotermico.
-
-## 🚀 Paso 5: Levantar los Servicios
-Inicia la aplicación en modo producción:
-docker compose -f docker-compose.prod.yml up -d
-
-✅ Verificación
-
-Verifica que los contenedores estén corriendo:
-docker ps
-
-
-Revisa los logs de Traefik para confirmar que el certificado SSL se generó:
-docker logs mi-traefik-proxy
-
-
-Accede a la aplicación en tu navegador: https://<tu-dominio>.
-
-Opcionalmente, accede al dashboard de EMQX en: http://<tu-dominio>:18083.
-
-
-
-Nota: Asegúrate de que el DNS de tu dominio esté correctamente configurado para apuntar a la IP de tu servidor.
+monitoreoTermico/
+├── backend/                # Servidor Node.js (Express + WebSocket)
+├── frontend/               # Aplicación React
+├── gateway/                # Gateway Python para conexión PLC
+├── diagrams/               # Diagramas del sistema
+├── docker-compose.prod.yml # Configuración de producción Docker
+├── .env.example           # Variables de entorno de ejemplo
+├── README.md              # Documentación principal
+└── LICENSE.md             # Licencia de uso restringido
+```
 
 ## 📜 Licencia
+
 Este proyecto está protegido por una **Licencia de Uso Restringido**.  
 Se autoriza únicamente a **FAGOR EDERLAN MEXICO** a ejecutar este software en sus instalaciones.  
 
 El uso, distribución o implementación en otras plantas, filiales o localizaciones sin autorización expresa del autor está estrictamente prohibido.  
 Consulta el archivo [LICENSE.md](./LICENSE.md) para más detalles.
 
-📫 Contacto
-Oscarr093 - GitHub | Correo: oscar0931996@gmail.com
+## 📞 Contacto
+
+- **Autor**: Oscar Rosales (Oscarr093)
+- **GitHub**: [OscarR093](https://github.com/OscarR093)
+- **Email**: oscar0931996@gmail.com
