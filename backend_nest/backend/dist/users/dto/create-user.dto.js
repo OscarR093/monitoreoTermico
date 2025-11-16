@@ -17,8 +17,6 @@ class CreateUserDto {
     password;
     email;
     fullName;
-    admin;
-    isSuperAdmin;
     cellPhone;
 }
 exports.CreateUserDto = CreateUserDto;
@@ -42,39 +40,23 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Email address of the user',
-        example: 'john.doe@example.com'
+        example: 'john.doe@example.com',
+        required: false
     }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "email", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Full name of the user',
-        example: 'John Doe'
+        example: 'John Doe',
+        required: false
     }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "fullName", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Whether the user has admin privileges',
-        required: false,
-        example: false
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], CreateUserDto.prototype, "admin", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Whether the user has super admin privileges',
-        required: false,
-        example: false
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], CreateUserDto.prototype, "isSuperAdmin", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Cell phone number of the user',

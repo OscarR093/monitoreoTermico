@@ -8,11 +8,11 @@ export declare class AuthController {
     constructor(authService: AuthService, usersService: UsersService);
     register(dto: CreateUserDto): Promise<{
         username: string;
-        email: string;
-        fullName: string;
+        email?: string;
+        fullName?: string;
         admin: boolean;
         isSuperAdmin: boolean;
-        cellPhone: string;
+        cellPhone?: string;
         mustChangePassword: boolean;
         _id: import("mongoose").Types.ObjectId;
         __v: number;

@@ -1,98 +1,162 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend de Monitoreo Térmico
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Sistema backend para la aplicación de monitoreo térmico con funcionalidades completas de autenticación y gestión de usuarios.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Características
 
-## Description
+- **Autenticación JWT**: Sistema completo de login y registro de usuarios
+- **Gestión de usuarios**: CRUD completo para la administración de usuarios
+- **Seguridad robusta**: Encriptación de contraseñas con bcrypt y tokens JWT
+- **Documentación API**: Swagger integrado para documentación interactiva
+- **Validación de configuración**: Sistema centralizado de configuración con validación
+- **Pruebas unitarias**: Cobertura completa de pruebas para servicios y controladores
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Tecnologías usadas
 
-## Project setup
+- **NestJS**: Framework principal de backend
+- **TypeScript**: Lenguaje de programación
+- **MongoDB**: Base de datos NoSQL
+- **Mongoose**: ODM para MongoDB
+- **Passport**: Autenticación
+- **Swagger**: Documentación de API
+- **Jest**: Pruebas unitarias
 
-```bash
-$ npm install
+## Estructura del proyecto
+
+```
+src/
+├── auth/              # Módulo de autenticación
+│   ├── dto/           # DTOs para login y registro
+│   ├── auth.module.ts
+│   ├── auth.service.ts
+│   ├── auth.controller.ts
+│   └── jwt.strategy.ts
+├── users/             # Módulo de usuarios
+│   ├── dto/           # DTOs de usuarios
+│   ├── schemas/       # Esquemas de Mongoose
+│   ├── users.module.ts
+│   ├── users.service.ts
+│   └── users.controller.ts
+├── config/            # Configuración centralizada
+│   ├── config.module.ts
+│   ├── configuration.ts
+│   └── validation.ts
+└── app.module.ts      # Módulo principal
 ```
 
-## Compile and run the project
+## Prerrequisitos
 
+- Node.js 16.x o superior
+- MongoDB
+- npm o yarn
+
+## Instalación
+
+1. Clonar el repositorio
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+git clone <url-del-repositorio>
+cd <nombre-del-repositorio>
 ```
 
-## Run tests
-
+2. Instalar dependencias
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm install
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+3. Configurar variables de entorno
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+cp .env.example .env
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+4. Editar el archivo `.env` con tus propias configuraciones
 
-## Resources
+## Variables de entorno
 
-Check out a few resources that may come in handy when working with NestJS:
+- `DOMAIN_URL`: URL del dominio (por defecto: localhost)
+- `MONGO_USER`: Usuario de MongoDB
+- `MONGO_PASS`: Contraseña de MongoDB
+- `MONGO_DB_NAME`: Nombre de la base de datos (por defecto: monitoreoTermico)
+- `MONGO_PORT`: Puerto de MongoDB (por defecto: 27017)
+- `JWT_SECRET`: Secreto para JWT
+- `JWT_EXPIRES_IN`: Tiempo de expiración de JWT (por defecto: 3600s)
+- `BCRYPT_SALT_ROUNDS`: Número de rondas para encriptación bcrypt (por defecto: 10)
+- `NODE_ENV`: Entorno de ejecución (production, development, test)
+- `PORT`: Puerto de la aplicación (por defecto: 3000)
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Iniciar la aplicación
 
-## Support
+### Desarrollo
+```bash
+npm run start:dev
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Producción
+```bash
+npm run build
+npm run start:prod
+```
 
-## Stay in touch
+## Endpoints de autenticación
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Registro de usuario
+- `POST /auth/register`
+- Campos requeridos: `username`, `password`
+- Campos opcionales: `email`, `fullName`, `cellPhone`
 
-## License
+### Login de usuario
+- `POST /auth/login`
+- Campos requeridos: `username`, `password`
+- Retorna JWT token
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Endpoints de usuarios (próximamente)
+
+- `GET /users` - Listar usuarios
+- `GET /users/:id` - Obtener usuario por ID
+- `PUT /users/:id` - Actualizar usuario
+- `DELETE /users/:id` - Eliminar usuario
+
+## Documentación de API
+
+La documentación interactiva de la API está disponible en `/docs` cuando la aplicación está en ejecución.
+
+## Pruebas
+
+### Ejecutar todas las pruebas
+```bash
+npm run test
+```
+
+### Ejecutar pruebas en modo watch
+```bash
+npm run test:watch
+```
+
+### Cobertura de pruebas
+```bash
+npm run test:cov
+```
+
+## Seguridad
+
+- Las contraseñas son encriptadas usando bcrypt con salt configurable
+- Tokens JWT con expiración configurable
+- Validación de entrada de datos
+- Manejo seguro de errores
+
+## Contribución
+
+1. Haz un fork del repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Haz commit de tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Haz push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## Licencia
+
+Este proyecto está licenciado bajo [TU LICENCIA AQUÍ]
+
+## Contacto
+
+Equipo de desarrollo - [tu-email@ejemplo.com]
+
+Proyecto Link: [https://github.com/tu-usuario/tu-proyecto](https://github.com/tu-usuario/tu-proyecto)

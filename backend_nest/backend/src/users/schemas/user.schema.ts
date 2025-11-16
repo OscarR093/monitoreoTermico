@@ -11,11 +11,11 @@ export class User {
   @Prop({ required: true })
   password: string; // bcrypt hash
 
-  @Prop({ required: true, unique: true })
-  email: string;
+  @Prop({ required: false, unique: true, sparse: true }) // sparse: true permite múltiples valores null
+  email?: string;
 
-  @Prop({ required: true })
-  fullName: string;
+  @Prop({ required: false }) // Ahora no es requerido
+  fullName?: string;
 
   @Prop({ default: false })
   admin: boolean;
@@ -24,7 +24,7 @@ export class User {
   isSuperAdmin: boolean;
 
   @Prop({ default: '' })
-  cellPhone: string;
+  cellPhone?: string;
 
   @Prop({ default: true })
   mustChangePassword: boolean;

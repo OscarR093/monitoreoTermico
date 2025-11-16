@@ -60,18 +60,33 @@ let UsersService = class UsersService {
         this.configService = configService;
     }
     async create(dto) {
+        if (!dto.username || !dto.password) {
+            throw new common_1.ConflictException('Username and password are required');
+        }
+        const queryConditions = [];
+        queryConditions.push({ username: dto.username });
+        if (dto.email && dto.email.trim() !== '') {
+            queryConditions.push({ email: dto.email });
+        }
         const exists = await this.userModel.findOne({
-            $or: [{ email: dto.email }, { username: dto.username }],
+            $or: queryConditions,
         }).exec();
         if (exists) {
             throw new common_1.ConflictException('Usuario o email ya existe');
         }
-        const rounds = Number(this.configService.get('BCRYPT_SALT_ROUNDS') || 10);
+        const rounds = this.configService.get('bcrypt.saltRounds');
         const hash = await bcrypt.hash(dto.password, rounds);
-        const user = new this.userModel({
+        const userData = {
             ...dto,
             password: hash,
-        });
+            admin: false,
+            isSuperAdmin: false,
+            mustChangePassword: true,
+        };
+        if (!dto.email || dto.email.trim() === '') {
+            delete userData.email;
+        }
+        const user = new this.userModel(userData);
         return user.save();
     }
     async findByUsername(username, options) {

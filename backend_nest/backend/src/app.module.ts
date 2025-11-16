@@ -3,15 +3,16 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { ConfigAppModule } from './config/config.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigAppModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (cs: ConfigService) => ({
-        uri: `mongodb://${cs.get('MONGO_USER')}:${cs.get('MONGO_PASSWORD')}@localhost:27017/thermal_monitoring_db?authSource=admin`,
+      useFactory: (configService: ConfigService) => ({
+        uri: `mongodb://${configService.get('mongo.user')}:${configService.get('mongo.password')}@localhost:${configService.get('mongo.port')}/monitoreoTermico?authSource=admin`,
       }),
     }),
     UsersModule,

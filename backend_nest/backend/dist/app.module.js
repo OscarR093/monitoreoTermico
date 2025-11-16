@@ -12,18 +12,19 @@ const mongoose_1 = require("@nestjs/mongoose");
 const config_1 = require("@nestjs/config");
 const users_module_1 = require("./users/users.module");
 const auth_module_1 = require("./auth/auth.module");
+const config_module_1 = require("./config/config.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            config_1.ConfigModule.forRoot({ isGlobal: true }),
+            config_module_1.ConfigAppModule,
             mongoose_1.MongooseModule.forRootAsync({
                 imports: [config_1.ConfigModule],
                 inject: [config_1.ConfigService],
-                useFactory: (cs) => ({
-                    uri: `mongodb://${cs.get('MONGO_USER')}:${cs.get('MONGO_PASSWORD')}@localhost:27017/thermal_monitoring_db?authSource=admin`,
+                useFactory: (configService) => ({
+                    uri: `mongodb://${configService.get('mongo.user')}:${configService.get('mongo.password')}@localhost:${configService.get('mongo.port')}/monitoreoTermico?authSource=admin`,
                 }),
             }),
             users_module_1.UsersModule,

@@ -19,35 +19,21 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'Email address of the user',
-    example: 'john.doe@example.com'
+    example: 'john.doe@example.com',
+    required: false
   })
+  @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @ApiProperty({
     description: 'Full name of the user',
-    example: 'John Doe'
+    example: 'John Doe',
+    required: false
   })
+  @IsOptional()
   @IsString()
-  fullName: string;
-
-  @ApiProperty({ 
-    description: 'Whether the user has admin privileges',
-    required: false,
-    example: false
-  })
-  @IsOptional()
-  @IsBoolean()
-  admin?: boolean;
-
-  @ApiProperty({ 
-    description: 'Whether the user has super admin privileges',
-    required: false,
-    example: false
-  })
-  @IsOptional()
-  @IsBoolean()
-  isSuperAdmin?: boolean;
+  fullName?: string;
 
   @ApiProperty({ 
     description: 'Cell phone number of the user',

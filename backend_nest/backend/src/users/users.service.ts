@@ -20,21 +20,49 @@ export class UsersService {
    * @throws ConflictException if username or email already exists
    */
   async create(dto: CreateUserDto): Promise<HydratedDocument<User>> {
+    // Validar que los campos obligatorios estén presentes
+    if (!dto.username || !dto.password) {
+      throw new ConflictException('Username and password are required');
+    }
+
+    // Construir la condición de búsqueda para evitar duplicados
+    const queryConditions: Array<Record<string, any>> = [];
+    
+    // Siempre verificar el username
+    queryConditions.push({ username: dto.username });
+    
+    // Solo verificar el email si está definido y no es null/undefined
+    if (dto.email && dto.email.trim() !== '') {
+      queryConditions.push({ email: dto.email });
+    }
+
     const exists = await this.userModel.findOne({
-      $or: [{ email: dto.email }, { username: dto.username }],
+      $or: queryConditions,
     }).exec();
 
     if (exists) {
       throw new ConflictException('Usuario o email ya existe');
     }
 
-    const rounds = Number(this.configService.get('BCRYPT_SALT_ROUNDS') || 10);
+    const rounds = this.configService.get('bcrypt.saltRounds');
     const hash = await bcrypt.hash(dto.password, rounds);
 
-    const user = new this.userModel({
+    // Preparar los datos del usuario, asegurando que los campos opcionalmente nulos no se guarden como null
+    const userData = {
       ...dto,
       password: hash,
-    });
+      // Asegurar valores por defecto para campos relacionados con roles
+      admin: false, // Siempre falso por defecto
+      isSuperAdmin: false, // Siempre falso por defecto
+      mustChangePassword: true, // Siempre verdadero por defecto
+    };
+
+    // Si el email es nulo o vacío, no incluirlo en el documento
+    if (!dto.email || dto.email.trim() === '') {
+      delete userData.email;
+    }
+
+    const user = new this.userModel(userData);
 
     return user.save() as Promise<HydratedDocument<User>>;
   }
