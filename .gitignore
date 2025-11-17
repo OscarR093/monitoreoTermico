@@ -21,6 +21,19 @@ Thumbs.db
 .vscode/
 .idea/
 
+#Jest Coverage
+
+coverage/
+
+#Jest Html Reporters
+
+html-report/
+jest-html-reporters-*.html
+jest_html_reporters/
+jest-html-reporters-attach/
+test-reports/
+jest_html_reporters*.html
+
 # =================================================================
 # Python (para tu 'gateway')
 # =================================================================
