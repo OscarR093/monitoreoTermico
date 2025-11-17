@@ -10,6 +10,9 @@ Sistema backend para la aplicación de monitoreo térmico con funcionalidades co
 - **Documentación API**: Swagger integrado para documentación interactiva
 - **Validación de configuración**: Sistema centralizado de configuración con validación
 - **Pruebas unitarias**: Cobertura completa de pruebas para servicios y controladores
+- **Validación de datos**: Validación completa de entrada con class-validator
+- **Gestión de roles**: Soporte para roles de usuario (admin, superadmin)
+- **Seguridad de contraseñas**: Filtros automáticos para evitar exposición de contraseñas
 
 ## Tecnologías usadas
 
@@ -32,7 +35,7 @@ src/
 │   ├── auth.controller.ts
 │   └── jwt.strategy.ts
 ├── users/             # Módulo de usuarios
-│   ├── dto/           # DTOs de usuarios
+│   ├── dto/           # DTOs para creación, actualización y lectura de usuarios
 │   ├── schemas/       # Esquemas de Mongoose
 │   ├── users.module.ts
 │   ├── users.service.ts
@@ -108,12 +111,33 @@ npm run start:prod
 - Campos requeridos: `username`, `password`
 - Retorna JWT token
 
-## Endpoints de usuarios (próximamente)
+## Endpoints de usuarios
 
-- `GET /users` - Listar usuarios
-- `GET /users/:id` - Obtener usuario por ID
-- `PUT /users/:id` - Actualizar usuario
-- `DELETE /users/:id` - Eliminar usuario
+### Gestión de usuarios (CRUD completo)
+
+#### Crear usuario
+- `POST /users`
+- Campos requeridos: `username`, `password`
+- Campos opcionales: `email`, `fullName`, `cellPhone`
+- Retorna: El usuario creado (sin contraseña)
+
+#### Listar usuarios
+- `GET /users`
+- Retorna: Array de usuarios (sin contraseñas)
+
+#### Obtener usuario por ID
+- `GET /users/:id`
+- Retorna: Usuario específico (sin contraseña)
+
+#### Actualizar usuario
+- `PATCH /users/:id`
+- Campos actualizables: `username`, `password`, `email`, `fullName`, `cellPhone`, `admin`, `isSuperAdmin`, `mustChangePassword`
+- Valida unicidad de username y email
+- Retorna: Usuario actualizado (sin contraseña)
+
+#### Eliminar usuario
+- `DELETE /users/:id`
+- Retorna: Código 204 sin contenido
 
 ## Documentación de API
 
@@ -135,6 +159,12 @@ npm run test:watch
 ```bash
 npm run test:cov
 ```
+
+### Cobertura actual
+- **Usuarios**: CRUD completo con pruebas unitarias (create, findAll, findById, update, remove)
+- **Autenticación**: Registro, login y validación de credenciales
+- **Servicios**: Pruebas completas con mocks adecuados
+- **Controladores**: Pruebas de integración con servicios
 
 ## Seguridad
 
