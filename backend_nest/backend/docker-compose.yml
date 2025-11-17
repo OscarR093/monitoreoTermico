@@ -37,6 +37,21 @@ services:
     networks:
       - mi-red
 
+  emqx:
+    image: emqx/emqx:5.7.0
+    container_name: mi-broker-emqx
+    restart: unless-stopped
+    environment:
+      - "EMQX_LISTENERS__TCP__DEFAULT__BIND=0.0.0.0:1883"
+      - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
+      - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
+      - "EMQX_NODE__COOKIE=${EMQX_NODE_COOKIE}"
+    ports:
+      - "1883:1883"
+      - "18083:18083"
+    networks:
+      - mi-red
+
 networks:
   mi-red:
 

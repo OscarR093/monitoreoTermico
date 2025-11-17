@@ -13,6 +13,9 @@ const config_1 = require("@nestjs/config");
 const users_module_1 = require("./users/users.module");
 const auth_module_1 = require("./auth/auth.module");
 const config_module_1 = require("./config/config.module");
+const temperature_history_module_1 = require("./temperature-history/temperature-history.module");
+const mqtt_module_1 = require("./mqtt/mqtt.module");
+const websocket_module_1 = require("./websocket/websocket.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -29,6 +32,9 @@ exports.AppModule = AppModule = __decorate([
             }),
             users_module_1.UsersModule,
             auth_module_1.AuthModule,
+            temperature_history_module_1.TemperatureHistoryModule,
+            mqtt_module_1.MqttModule,
+            websocket_module_1.WebSocketModule,
         ],
     })
 ], AppModule);

@@ -10,6 +10,9 @@ export interface EnvironmentConfig {
   mosquitto: {
     user: string;
     password: string;
+    brokerUrl?: string; // Opcional, ya que se puede construir a partir de componentes
+    host?: string;
+    port?: number;
   };
   emqx: {
     nodeCookie: string;

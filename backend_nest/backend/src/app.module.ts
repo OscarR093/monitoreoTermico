@@ -4,6 +4,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigAppModule } from './config/config.module';
+import { TemperatureHistoryModule } from './temperature-history/temperature-history.module';
+import { MqttModule } from './mqtt/mqtt.module';
+import { WebSocketModule } from './websocket/websocket.module';
 
 @Module({
   imports: [
@@ -17,6 +20,9 @@ import { ConfigAppModule } from './config/config.module';
     }),
     UsersModule,
     AuthModule,
+    TemperatureHistoryModule,
+    MqttModule,
+    WebSocketModule,
   ],
 })
 export class AppModule { }

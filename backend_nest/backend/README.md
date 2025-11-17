@@ -1,11 +1,14 @@
 # Backend de Monitoreo Térmico
 
-Sistema backend para la aplicación de monitoreo térmico con funcionalidades completas de autenticación y gestión de usuarios.
+Sistema backend para la aplicación de monitoreo térmico con funcionalidades completas de autenticación, gestión de usuarios, historial de temperaturas y comunicación en tiempo real.
 
 ## Características
 
 - **Autenticación JWT**: Sistema completo de login y registro de usuarios
 - **Gestión de usuarios**: CRUD completo para la administración de usuarios
+- **Historial de temperaturas**: Almacenamiento automático con expiración de 30 días
+- **Comunicación en tiempo real**: WebSocket Gateway para datos de temperatura en vivo
+- **Conexión MQTT**: Integración con broker EMQX para comunicación con gateways PLC
 - **Seguridad robusta**: Encriptación de contraseñas con bcrypt y tokens JWT
 - **Documentación API**: Swagger integrado para documentación interactiva
 - **Validación de configuración**: Sistema centralizado de configuración con validación
@@ -21,6 +24,8 @@ Sistema backend para la aplicación de monitoreo térmico con funcionalidades co
 - **MongoDB**: Base de datos NoSQL
 - **Mongoose**: ODM para MongoDB
 - **Passport**: Autenticación
+- **Socket.IO**: WebSocket para comunicación en tiempo real
+- **MQTT.js**: Cliente MQTT para comunicación con EMQX
 - **Swagger**: Documentación de API
 - **Jest**: Pruebas unitarias
 
@@ -40,6 +45,18 @@ src/
 │   ├── users.module.ts
 │   ├── users.service.ts
 │   └── users.controller.ts
+├── temperature-history/ # Módulo de historial de temperaturas
+│   ├── dto/           # DTOs para consultas de historial
+│   ├── schemas/       # Esquemas de Mongoose
+│   ├── temperature-history.module.ts
+│   ├── temperature-history.service.ts
+│   └── temperature-history.controller.ts
+├── mqtt/              # Módulo de conexión MQTT
+│   ├── mqtt.module.ts
+│   └── mqtt-consumer.service.ts
+├── websocket/         # Módulo de comunicación en tiempo real
+│   ├── websocket.module.ts
+│   └── websocket.gateway.ts
 ├── config/            # Configuración centralizada
 │   ├── config.module.ts
 │   ├── configuration.ts
@@ -51,6 +68,7 @@ src/
 
 - Node.js 16.x o superior
 - MongoDB
+- EMQX Broker (para comunicación MQTT)
 - npm o yarn
 
 ## Instalación
@@ -80,6 +98,9 @@ cp .env.example .env
 - `MONGO_PASS`: Contraseña de MongoDB
 - `MONGO_DB_NAME`: Nombre de la base de datos (por defecto: monitoreoTermico)
 - `MONGO_PORT`: Puerto de MongoDB (por defecto: 27017)
+- `MOSQUITTO_USER`: Usuario del broker MQTT (por defecto: admin)
+- `MOSQUITTO_PASS`: Contraseña del broker MQTT (por defecto: public)
+- `EMQX_NODE_COOKIE`: Cookie para clúster de EMQX
 - `JWT_SECRET`: Secreto para JWT
 - `JWT_EXPIRES_IN`: Tiempo de expiración de JWT (por defecto: 3600s)
 - `BCRYPT_SALT_ROUNDS`: Número de rondas para encriptación bcrypt (por defecto: 10)
@@ -139,6 +160,55 @@ npm run start:prod
 - `DELETE /users/:id`
 - Retorna: Código 204 sin contenido
 
+## Endpoints de historial de temperaturas
+
+### Consulta de historial
+
+#### Consultar historial general
+- `GET /temperature-history`
+- Parámetros: `equipment`, `limit`, `sort`
+- Retorna: Array de registros de temperatura
+
+#### Filtrar historial
+- `GET /temperature-history/filter`
+- Parámetros: `equipment`, `startDate`, `endDate`, `minTemperature`, `maxTemperature`, `limit`
+- Retorna: Array de registros filtrados
+
+#### Consultar historial por equipo
+- `GET /temperature-history/equipment/:equipmentName`
+- Parámetros: `limit`
+- Retorna: Array de registros para un equipo específico
+
+#### Endpoint de compatibilidad (frontend)
+- `GET /temperature-history/thermocouple-history/:equipmentName`
+- Parámetros: `limit`
+- Retorna: Array de registros para compatibilidad con frontend existente
+
+#### Listar equipos
+- `GET /temperature-history/equipment-list`
+- Retorna: Array de nombres de equipos únicos
+
+#### Estadísticas de equipo
+- `GET /temperature-history/equipment/:equipmentName/stats`
+- Retorna: Estadísticas (conteo, promedio, min, max, última lectura) para un equipo específico
+
+## WebSocket y comunicación en tiempo real
+
+### Eventos WebSocket disponibles
+
+#### Conexión
+- El gateway WebSocket se inicia automáticamente con la aplicación
+- Se conecta al broker MQTT configurado
+- Envía comandos START/STOP al gateway cuando clientes se conectan/desconectan
+
+#### Recepción de datos en tiempo real
+- `plcData`: Evento que transmite datos de temperatura en tiempo real desde el PLC
+- Datos recibidos del tópico `plcTemperaturas/tiemporeal/+`
+
+#### Comandos de control
+- `react-client`: Mensaje de handshake inicial desde clientes React
+- START/STOP: Comandos automáticos al tópico `gatewayTemperaturas/control/tiemporeal`
+
 ## Documentación de API
 
 La documentación interactiva de la API está disponible en `/docs` cuando la aplicación está en ejecución.
@@ -163,6 +233,8 @@ npm run test:cov
 ### Cobertura actual
 - **Usuarios**: CRUD completo con pruebas unitarias (create, findAll, findById, update, remove)
 - **Autenticación**: Registro, login y validación de credenciales
+- **Historial de temperaturas**: Pruebas unitarias y e2e para servicio y controlador
+- **WebSocket**: Pruebas unitarias para gateway de comunicación en tiempo real
 - **Servicios**: Pruebas completas con mocks adecuados
 - **Controladores**: Pruebas de integración con servicios
 
@@ -172,6 +244,7 @@ npm run test:cov
 - Tokens JWT con expiración configurable
 - Validación de entrada de datos
 - Manejo seguro de errores
+- Conexión segura con EMQX Broker (MQTTS para conexiones externas)
 
 ## Contribución
 
