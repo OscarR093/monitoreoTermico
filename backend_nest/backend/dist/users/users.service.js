@@ -86,8 +86,33 @@ let UsersService = class UsersService {
         if (!dto.email || dto.email.trim() === '') {
             delete userData.email;
         }
-        const user = new this.userModel(userData);
-        return user.save();
+        const createdUser = await this.userModel.create(userData);
+        return createdUser;
+    }
+    async findAll() {
+        const users = await this.userModel.find().exec();
+        return users.map(user => {
+            const userObject = user.toObject ? user.toObject() : user;
+            const { password, ...userWithoutPassword } = userObject;
+            return userWithoutPassword;
+        });
+    }
+    async findById(id, options) {
+        if (options?.lean) {
+            const user = await this.userModel.findById(id).lean().exec();
+            if (user) {
+                const { password, ...userWithoutPassword } = user;
+                return userWithoutPassword;
+            }
+            return null;
+        }
+        const user = await this.userModel.findById(id).exec();
+        if (user) {
+            const userObject = user.toObject ? user.toObject() : user;
+            const { password, ...userWithoutPassword } = userObject;
+            return userWithoutPassword;
+        }
+        return null;
     }
     async findByUsername(username, options) {
         if (options?.lean) {
@@ -95,11 +120,45 @@ let UsersService = class UsersService {
         }
         return this.userModel.findOne({ username }).exec();
     }
-    async findById(id, options) {
-        if (options?.lean) {
-            return this.userModel.findById(id).lean().exec();
+    async update(id, dto) {
+        const existingUser = await this.userModel.findById(id).exec();
+        if (!existingUser) {
+            throw new common_1.NotFoundException('Usuario no encontrado');
         }
-        return this.userModel.findById(id).exec();
+        if (dto.username && dto.username !== existingUser.username) {
+            const usernameExists = await this.userModel.findOne({
+                username: dto.username,
+                _id: { $ne: id }
+            }).exec();
+            if (usernameExists) {
+                throw new common_1.ConflictException('El nombre de usuario ya está en uso');
+            }
+        }
+        if (dto.email && dto.email !== existingUser.email) {
+            const emailExists = await this.userModel.findOne({
+                email: dto.email,
+                _id: { $ne: id }
+            }).exec();
+            if (emailExists) {
+                throw new common_1.ConflictException('El email ya está en uso');
+            }
+        }
+        const updateData = { ...dto };
+        if (dto.password) {
+            const rounds = this.configService.get('bcrypt.saltRounds');
+            updateData.password = await bcrypt.hash(dto.password, rounds);
+        }
+        const updatedUser = await this.userModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+        if (updatedUser) {
+            const userObject = updatedUser.toObject ? updatedUser.toObject() : updatedUser;
+            const { password, ...userWithoutPassword } = userObject;
+            return userWithoutPassword;
+        }
+        return null;
+    }
+    async remove(id) {
+        const result = await this.userModel.findByIdAndDelete(id).exec();
+        return !!result;
     }
 };
 exports.UsersService = UsersService;
