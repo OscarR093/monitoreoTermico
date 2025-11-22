@@ -45,6 +45,10 @@ describe('UsersController', () => {
         cellPhone: '+1234567890',
       };
       
+      const mockRequest = {
+        user: { userId: 'adminId', admin: true }
+      };
+      
       const expectedResult = {
         _id: '6739f1e4b8c8d8e8f8a1b2c3',
         username: 'testuser',
@@ -58,10 +62,10 @@ describe('UsersController', () => {
       
       jest.spyOn(service, 'create').mockResolvedValue(expectedResult as any);
 
-      const result = await controller.create(createUserDto);
+      const result = await controller.create(createUserDto, mockRequest);
 
       expect(result).toEqual(expectedResult);
-      expect(service.create).toHaveBeenCalledWith(createUserDto);
+      expect(service.create).toHaveBeenCalledWith(createUserDto, { admin: false, isSuperAdmin: false });
     });
   });
 
@@ -134,6 +138,10 @@ describe('UsersController', () => {
         email: 'updated@example.com'
       };
       
+      const mockRequest = {
+        user: { userId: '6739f1e4b8c8d8e8f8a1b2c3', admin: true }
+      };
+      
       const expectedUser = {
         _id: '6739f1e4b8c8d8e8f8a1b2c3',
         username: 'testuser',
@@ -147,7 +155,7 @@ describe('UsersController', () => {
       
       jest.spyOn(service, 'update').mockResolvedValue(expectedUser as any);
 
-      const result = await controller.update('6739f1e4b8c8d8e8f8a1b2c3', updateUserDto);
+      const result = await controller.update('6739f1e4b8c8d8e8f8a1b2c3', updateUserDto, mockRequest);
 
       expect(result).toEqual(expectedUser);
       expect(service.update).toHaveBeenCalledWith('6739f1e4b8c8d8e8f8a1b2c3', updateUserDto);
@@ -156,17 +164,32 @@ describe('UsersController', () => {
 
   describe('remove', () => {
     it('should remove a user', async () => {
+      const mockRequest = {
+        user: { userId: 'adminId', admin: true, isSuperAdmin: true }
+      };
+      
+      const mockUser = {
+        _id: '6739f1e4b8c8d8e8f8a1b2c3',
+        username: 'testuser',
+        isSuperAdmin: false,
+      };
+      
+      jest.spyOn(service, 'findById').mockResolvedValue(mockUser as any);
       jest.spyOn(service, 'remove').mockResolvedValue(true);
 
-      await controller.remove('6739f1e4b8c8d8e8f8a1b2c3');
+      await controller.remove('6739f1e4b8c8d8e8f8a1b2c3', mockRequest);
 
       expect(service.remove).toHaveBeenCalledWith('6739f1e4b8c8d8e8f8a1b2c3');
     });
 
     it('should throw error if user not found for deletion', async () => {
-      jest.spyOn(service, 'remove').mockResolvedValue(false);
+      const mockRequest = {
+        user: { userId: 'adminId', admin: true, isSuperAdmin: true }
+      };
+      
+      jest.spyOn(service, 'findById').mockResolvedValue(null);
 
-      await expect(controller.remove('nonexistent')).rejects.toThrow();
+      await expect(controller.remove('nonexistent', mockRequest)).rejects.toThrow();
     });
   });
 });

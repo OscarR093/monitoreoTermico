@@ -56,6 +56,10 @@ class EnvironmentVariables {
   @IsOptional()
   NODE_ENV?: Environment;
 
+  @IsNumber()
+  @IsOptional()
+  PORT?: number;
+
   @IsString()
   @IsOptional()
   SUPER_USER_USERNAME?: string;
@@ -64,9 +68,17 @@ class EnvironmentVariables {
   @IsOptional()
   SUPER_USER_PASSWORD?: string;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  PORT?: number;
+  SUPER_USER_EMAIL?: string;
+
+  @IsString()
+  @IsOptional()
+  SUPER_USER_FULLNAME?: string;
+
+  @IsString()
+  @IsOptional()
+  SUPER_USER_PHONE?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

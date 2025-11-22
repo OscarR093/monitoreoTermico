@@ -17,10 +17,14 @@ export class UsersService {
   /**
    * Creates a new user with encrypted password
    * @param dto User data from request
+   * @param roleOverrides Optional role overrides for admin/superadmin creation
    * @returns The created user document (without password)
    * @throws ConflictException if username or email already exists
    */
-  async create(dto: CreateUserDto): Promise<HydratedDocument<User>> {
+  async create(
+    dto: CreateUserDto, 
+    roleOverrides?: { admin?: boolean; isSuperAdmin?: boolean }
+  ): Promise<HydratedDocument<User>> {
     // Validar que los campos obligatorios estén presentes
     if (!dto.username || !dto.password) {
       throw new ConflictException('Username and password are required');
@@ -53,9 +57,9 @@ export class UsersService {
       ...dto,
       password: hash,
       // Asegurar valores por defecto para campos relacionados con roles
-      admin: false, // Siempre falso por defecto
-      isSuperAdmin: false, // Siempre falso por defecto
-      mustChangePassword: true, // Siempre verdadero por defecto
+      admin: roleOverrides?.admin ?? false, // Valor por defecto o sobrescrito
+      isSuperAdmin: roleOverrides?.isSuperAdmin ?? false, // Valor por defecto o sobrescrito
+      mustChangePassword: true, // Siempre verdadero por defecto para nuevos usuarios
     };
 
     // Si el email es nulo o vacío, no incluirlo en el documento

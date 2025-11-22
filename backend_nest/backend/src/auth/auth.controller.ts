@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UnauthorizedException, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, HttpCode, Get, UseGuards, Request, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
@@ -6,6 +6,8 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { HydratedDocument } from 'mongoose';
 import { User } from '../users/schemas/user.schema';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import type { Response } from 'express';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -18,8 +20,8 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({ type: CreateUserDto })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: 'User successfully registered',
     schema: {
       type: 'object',
@@ -38,13 +40,13 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'Bad request - Invalid input data' 
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid input data'
   })
-  @ApiResponse({ 
-    status: 409, 
-    description: 'Conflict - User already exists' 
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict - User already exists'
   })
   async register(@Body() dto: CreateUserDto) {
     const user: HydratedDocument<User> = await this.usersService.create(dto);
@@ -56,8 +58,8 @@ export class AuthController {
   @HttpCode(200)
   @ApiOperation({ summary: 'User login' })
   @ApiBody({ type: LoginDto })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Login successful',
     schema: {
       type: 'object',
@@ -70,14 +72,135 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ 
-    status: 401, 
-    description: 'Unauthorized - Invalid credentials' 
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid credentials'
   })
-  async login(@Body() dto: LoginDto) {
+  async login(@Body() dto: LoginDto, @Res() res) {
     const user = await this.authService.validateUser(dto.username, dto.password);
     if (!user) throw new UnauthorizedException('Credenciales inválidas');
-    return this.authService.login(user); // user ya es POJO sin password
+    const result = await this.authService.login(user);
+
+    // Establecer cookie con el token
+    this.authService.setCookieToken(res, result.access_token);
+
+    // Devolver el usuario y el token en el cuerpo de la respuesta
+    // El frontend espera response.user o response (si es el usuario directo)
+    return res.json({
+      access_token: result.access_token,
+      user: result.user
+    });
+  }
+
+  @Get('check')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Check user session' })
+  @ApiResponse({
+    status: 200,
+    description: 'Session is valid',
+    schema: {
+      type: 'object',
+      example: {
+        valid: true,
+        user: {
+          _id: '673b2a1c9d8e4f5a6b7c8d9e',
+          username: 'john_doe',
+          email: 'john@example.com',
+          fullName: 'John Doe',
+          admin: false,
+          isSuperAdmin: false,
+          cellPhone: '',
+          createdAt: '2025-11-15T10:30:00.000Z',
+          updatedAt: '2025-11-15T10:30:00.000Z'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Session is invalid or expired'
+  })
+  checkSession(@Request() req) {
+    return {
+      valid: true,
+      user: req.user
+    };
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout user and clear session' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully logged out',
+    schema: {
+      type: 'object',
+      example: {
+        loggedOut: true
+      }
+    }
+  })
+  logout(@Res() res: Response) {
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+    return res.json({ loggedOut: true });
   }
 }
 
+// CONTROLADOR DE RUTAS LEGACY ALIAS - para compatibilidad con frontend
+@Controller()
+export class LegacyAuthController {
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) { }
+
+  // Alias para login (frontend llama a /api/login, no /api/auth/login)
+  @Post('login')
+  @HttpCode(200)
+  async loginAlias(@Body() dto: LoginDto, @Res() res) {
+    const user = await this.authService.validateUser(dto.username, dto.password);
+    if (!user) throw new UnauthorizedException('Credenciales inválidas');
+    const result = await this.authService.login(user);
+
+    // Establecer cookie con el token
+    this.authService.setCookieToken(res, result.access_token);
+
+    // Devolver el usuario y el token en el cuerpo de la respuesta
+    return res.json({
+      access_token: result.access_token,
+      user: result.user
+    });
+  }
+
+  // Alias para check (frontend llama a /api/auth/check)
+  @Get('auth/check')
+  @UseGuards(JwtAuthGuard)
+  checkSessionAlias(@Request() req) {
+    return {
+      valid: true,
+      user: req.user
+    };
+  }
+
+  // Alias para register
+  @Post('register')
+  async registerAlias(@Body() dto: CreateUserDto) {
+    const user: HydratedDocument<User> = await this.usersService.create(dto);
+    const { password, ...rest } = user.toObject();
+    return rest;
+  }
+
+  // Alias para logout
+  @Post('logout')
+  async logoutAlias(@Res() res: Response) {
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+    return res.json({ loggedOut: true });
+  }
+}

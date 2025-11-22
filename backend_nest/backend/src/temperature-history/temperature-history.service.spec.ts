@@ -79,9 +79,9 @@ describe('TemperatureHistoryService', () => {
       const result = await service.findByEquipment('Torre Fusora');
       expect(result).toEqual(mockHistories);
       expect(mockModel.find).toHaveBeenCalledWith(
-        { equipo: 'Torre Fusora' },
+        expect.objectContaining({ equipo: 'Torre Fusora' }),
         null,
-        { sort: { timestamp: -1 } }
+        expect.objectContaining({ sort: { timestamp: -1 }, select: 'temperatura timestamp -_id' })
       );
     });
 
@@ -93,9 +93,9 @@ describe('TemperatureHistoryService', () => {
       const result = await service.findByEquipment('Torre Fusora', 10);
       expect(result).toEqual(mockHistories);
       expect(mockModel.find).toHaveBeenCalledWith(
-        { equipo: 'Torre Fusora' },
+        expect.objectContaining({ equipo: 'Torre Fusora' }),
         null,
-        { sort: { timestamp: -1 }, limit: 10 }
+        expect.objectContaining({ sort: { timestamp: -1 }, limit: 10, select: 'temperatura timestamp -_id' })
       );
     });
   });

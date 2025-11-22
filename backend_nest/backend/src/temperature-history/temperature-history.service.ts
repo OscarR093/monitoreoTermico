@@ -21,16 +21,56 @@ export class TemperatureHistoryService {
     });
   }
 
-  // Método para encontrar historiales por equipo
+  // Método para encontrar historiales por equipo (filtrado por últimas 24 horas para compatibilidad)
   async findByEquipment(equipmentName: string, limit?: number): Promise<TemperatureHistoryDocument[]> {
-    const query = { equipo: equipmentName };
-    const options: any = { sort: { timestamp: -1 } }; // Ordenar por timestamp descendente
+    // Calculamos la fecha de hace 24 horas para filtrar
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+    const query = { 
+      equipo: equipmentName,
+      timestamp: { $gte: twentyFourHoursAgo } // Solo registros de las últimas 24 horas
+    };
+    
+    const options: any = { 
+      sort: { timestamp: -1 }, // Ordena por fecha, los más nuevos primero
+      select: 'temperatura timestamp -_id' // Selecciona solo los campos que necesitas para compatibilidad
+    };
     
     if (limit) {
       options.limit = limit;
     }
 
     const result = await this.temperatureHistoryModel.find(query, null, options).exec();
+    return result as unknown as TemperatureHistoryDocument[];
+  }
+
+  // Método para encontrar historiales por rango de fechas (para el endpoint de compatibilidad)
+  async findByDateRange(
+    equipmentName: string, 
+    startDate: Date, 
+    endDate: Date, 
+    options?: { sort?: any; select?: string }
+  ): Promise<TemperatureHistoryDocument[]> {
+    const query = { 
+      equipo: equipmentName,
+      timestamp: { 
+        $gte: startDate,
+        $lte: endDate
+      } 
+    };
+    
+    let queryBuilder = this.temperatureHistoryModel.find(query);
+    
+    if (options?.select) {
+      queryBuilder = queryBuilder.select(options.select);
+    }
+    
+    if (options?.sort) {
+      queryBuilder = queryBuilder.sort(options.sort);
+    }
+    
+    const result = await queryBuilder.exec();
     return result as unknown as TemperatureHistoryDocument[];
   }
 

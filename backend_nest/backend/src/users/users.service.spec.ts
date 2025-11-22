@@ -50,7 +50,7 @@ describe('UsersService', () => {
     
     // Configurar bcrypt mock
     (bcrypt.hash as jest.MockedFunction<typeof bcrypt.hash>)
-      .mockResolvedValue('hashed_test_password');
+      .mockResolvedValue('hashed_test_password' as never);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -207,7 +207,7 @@ describe('UsersService', () => {
       const result = await service.findById('6739f1e4b8c8d8e8f8a1b2c3');
 
       expect(result).not.toHaveProperty('password');
-      expect(result.username).toBe('testuser');
+      expect(result?.username).toBe('testuser');
     });
 
     it('should return null if user not found', async () => {
@@ -268,8 +268,8 @@ describe('UsersService', () => {
 
       const result = await service.update('6739f1e4b8c8d8e8f8a1b2c3', updateUserDto);
 
-      expect(result.fullName).toBe('Updated Name');
-      expect(result.email).toBe('updated@example.com');
+      expect(result?.fullName).toBe('Updated Name');
+      expect(result?.email).toBe('updated@example.com');
     });
 
     it('should throw NotFoundException if user does not exist', async () => {

@@ -8,20 +8,15 @@ import {
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server, WebSocket } from 'ws';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @WebSocketGateway({
-  cors: {
-    origin: "*", // En producción, restringir a dominios específicos
-    methods: ['GET', 'POST'],
-  },
-  transports: ['websocket'], // Usar solo websocket, no polling
+  path: '/', // Escuchar en la raíz, igual que antes
 })
 export class WebSocketGatewayService
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private logger: Logger = new Logger('WebSocketGateway');
   private mqttClient: any;
@@ -30,27 +25,27 @@ export class WebSocketGatewayService
 
   constructor(
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   afterInit(server: Server) {
-    this.logger.log('WebSocket Gateway inicializado');
-    
+    this.logger.log('WebSocket Gateway inicializado (ws nativo)');
+
     // Importar mqtt dinámicamente y conectar
     this.initializeMqttConnection();
   }
 
   private async initializeMqttConnection() {
     const mqtt = await import('mqtt');
-    
+
     // Construir la URL del broker MQTT
     const host = this.configService.get<string>('mosquitto.host') || 'localhost';
     const port = this.configService.get<number>('mosquitto.port') || 1883;
     const user = this.configService.get<string>('mosquitto.user') || 'admin';
     const password = this.configService.get<string>('mosquitto.password') || 'public';
-    
-    const mqttBrokerUrl = this.configService.get<string>('mosquitto.brokerUrl') || 
-                         `mqtt://${user}:${password}@${host}:${port}`;
-    
+
+    const mqttBrokerUrl = this.configService.get<string>('mosquitto.brokerUrl') ||
+      `mqtt://${user}:${password}@${host}:${port}`;
+
     this.logger.log(`Intentando conectar al broker MQTT para WebSocket en ${mqttBrokerUrl}...`);
     this.mqttClient = mqtt.connect(mqttBrokerUrl, {
       username: user,
@@ -82,48 +77,59 @@ export class WebSocketGatewayService
   async handleMqttMessage(topic: string, payload: Buffer) {
     try {
       const messageStr = payload.toString();
-      const messageJson = JSON.parse(messageStr);
+      // Validar que sea JSON válido antes de enviar
+      JSON.parse(messageStr);
 
       // Transmitir el mensaje a todos los clientes websocket conectados
-      this.server.emit('plcData', messageJson);
+      // En 'ws', iteramos sobre this.server.clients
+      this.server.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(messageStr);
+        }
+      });
     } catch (error) {
       this.logger.error('Error al procesar el mensaje MQTT:', error);
     }
   }
 
-  async handleConnection(@ConnectedSocket() client: Socket) {
-    this.logger.log(`Cliente WebSocket conectado con ID: ${client.id}`);
-    
+  async handleConnection(@ConnectedSocket() client: WebSocket) {
+    this.logger.log(`Cliente WebSocket conectado`);
+
     // Enviar comando START al gateway cuando se conecta el primer cliente
-    // El tamaño de clients no se puede usar directamente en Socket.IO
-    // Usaremos la propiedad de la server para contar conexiones
-    const clientsCount = Object.keys(this.server.sockets.sockets).length;
+    const clientsCount = this.server.clients.size;
+    this.logger.log(`Total clientes conectados: ${clientsCount}`);
+
     if (clientsCount === 1) {
       this.logger.log('MQTT -> Enviando comando START al gateway...');
-      this.mqttClient.publish(this.TOPIC_CONTROL, 'START');
+      if (this.mqttClient) {
+        this.mqttClient.publish(this.TOPIC_CONTROL, 'START');
+      }
     }
   }
 
-  async handleDisconnect(@ConnectedSocket() client: Socket) {
-    this.logger.log(`Cliente WebSocket desconectado con ID: ${client.id}`);
-    
+  async handleDisconnect(@ConnectedSocket() client: WebSocket) {
+    this.logger.log(`Cliente WebSocket desconectado`);
+
     // Esperar un momento para que se actualice la lista de sockets
     setTimeout(() => {
-      const clientsCount = Object.keys(this.server.sockets.sockets).length;
+      const clientsCount = this.server.clients ? this.server.clients.size : 0;
       this.logger.log(`Clientes WebSocket restantes: ${clientsCount}`);
-      
+
       // Enviar comando STOP al gateway cuando se desconectan todos los clientes
       if (clientsCount === 0) {
         this.logger.log('MQTT -> Enviando comando STOP al gateway...');
-        this.mqttClient.publish(this.TOPIC_CONTROL, 'STOP');
+        if (this.mqttClient) {
+          this.mqttClient.publish(this.TOPIC_CONTROL, 'STOP');
+        }
       }
     }, 100);
   }
 
   @SubscribeMessage('react-client')
-  handleReactClient(@MessageBody() data: any) {
+  handleReactClient(@MessageBody() data: any, @ConnectedSocket() client: WebSocket) {
     this.logger.log('Mensaje recibido del cliente React:', data);
-    // Podemos responder o procesar el mensaje según sea necesario
-    return { event: 'connected', data: 'Conexión WebSocket establecida' };
+    // Responder al cliente
+    const response = JSON.stringify({ event: 'connected', data: 'Conexión WebSocket establecida' });
+    client.send(response);
   }
 }

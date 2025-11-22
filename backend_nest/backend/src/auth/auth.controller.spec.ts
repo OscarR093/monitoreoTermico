@@ -14,6 +14,7 @@ describe('AuthController', () => {
     mockAuthService = {
       validateUser: jest.fn(),
       login: jest.fn(),
+      setCookieToken: jest.fn(),
     };
 
     mockUsersService = {
@@ -76,24 +77,34 @@ describe('AuthController', () => {
       const loginDto = { username: 'testuser', password: 'testpass' };
       const mockUser = { username: 'testuser', email: 'test@example.com' };
       const mockToken = { access_token: 'jwt-token' };
+      
+      // Mock del objeto de respuesta
+      const mockResponse = {
+        cookie: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
 
       mockAuthService.validateUser.mockResolvedValue(mockUser);
       mockAuthService.login.mockResolvedValue(mockToken);
 
-      const result = await controller.login(loginDto);
+      const result = await controller.login(loginDto, mockResponse);
 
       expect(mockAuthService.validateUser).toHaveBeenCalledWith('testuser', 'testpass');
       expect(mockAuthService.login).toHaveBeenCalledWith(mockUser);
-      expect(result).toEqual(mockToken);
+      expect(mockAuthService.setCookieToken).toHaveBeenCalledWith(mockResponse, 'jwt-token');
     });
 
     it('should throw UnauthorizedException when credentials are invalid', async () => {
       const loginDto = { username: 'testuser', password: 'wrongpass' };
+      const mockResponse = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
 
       mockAuthService.validateUser.mockResolvedValue(null);
 
-      await expect(controller.login(loginDto)).rejects.toThrow(UnauthorizedException);
-      await expect(controller.login(loginDto)).rejects.toThrow('Credenciales inválidas');
+      await expect(controller.login(loginDto, mockResponse)).rejects.toThrow(UnauthorizedException);
+      await expect(controller.login(loginDto, mockResponse)).rejects.toThrow('Credenciales inválidas');
     });
   });
 });

@@ -1,0 +1,123 @@
+# docker-compose.yml - Combinación completa para migración plug-and-play
+services:
+  # ----------------------------------------------------
+  # Frontend React
+  # ----------------------------------------------------
+  frontend:
+    image: node:24-slim
+    container_name: frontend-react
+    working_dir: /usr/src/app
+    volumes:
+      - ../../frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    expose:
+      - "5173"
+    environment:
+      - NODE_ENV=development
+    command: >
+      sh -c "
+        npm install --legacy-peer-deps &&
+        npm run dev -- --host 0.0.0.0
+      "
+    networks:
+      - mi-red
+    depends_on:
+      - backend
+
+  # ----------------------------------------------------
+  # Backend NestJS API
+  # ----------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-nest
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    environment:
+      - NODE_ENV=production
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASS=${MONGO_PASS}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_PORT=27017
+      - JWT_SECRET=${JWT_SECRET}
+      - MOSQUITTO_USER=${MOSQUITTO_USER}
+      - MOSQUITTO_PASS=${MOSQUITTO_PASS}
+      - EMQX_NODE_COOKIE=${EMQX_NODE_COOKIE}
+      - SUPER_USER_USERNAME=${SUPER_USER_USERNAME}
+      - SUPER_USER_PASSWORD=${SUPER_USER_PASSWORD}
+      - DOMAIN_URL=${DOMAIN_URL}
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    networks:
+      - mi-red
+
+  # ----------------------------------------------------
+  # MongoDB
+  # ----------------------------------------------------
+  mongodb:
+    container_name: mi-mongo
+    image: mongodb/mongodb-community-server:7.0-ubi8
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASS}"
+    volumes:
+      - datos-mongo:/data/db
+      - ../../.mongo/data/db:/data/db  # Persistencia local
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - mi-red
+
+  # ----------------------------------------------------
+  # MongoDB Express (UI para MongoDB)
+  # ----------------------------------------------------
+  mongo-express:
+    image: mongo-express:1.0.2-20
+    container_name: mi-mongo-express
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017/?authSource=admin"
+      ME_CONFIG_BASICAUTH: "true"
+      ME_CONFIG_BASICAUTH_USERNAME: "admin"
+      ME_CONFIG_BASICAUTH_PASSWORD: "superseguro123"
+      ME_CONFIG_SITE_SESSIONSECRET: "secret"
+    networks:
+      - mi-red
+
+  # ----------------------------------------------------
+  # EMQX Broker MQTT
+  # ----------------------------------------------------
+  emqx:
+    image: emqx/emqx:5.7.0
+    container_name: mi-broker-emqx
+    restart: unless-stopped
+    environment:
+      - "EMQX_LISTENERS__TCP__DEFAULT__BIND=0.0.0.0:1883"
+      - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
+      - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
+      - "EMQX_NODE__COOKIE=${EMQX_NODE_COOKIE}"
+    ports:
+      - "1883:1883"
+      - "18083:18083"
+    networks:
+      - mi-red
+
+networks:
+  mi-red:
+
+volumes:
+  datos-mongo:

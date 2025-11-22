@@ -28,8 +28,11 @@ export interface EnvironmentConfig {
     env: string;
   };
   superUser: {
-    username: string;
-    password: string;
+    username?: string;
+    password?: string;
+    email?: string;
+    fullName?: string;
+    phone?: string;
   };
   port: number;
 }
@@ -61,8 +64,11 @@ export default (): EnvironmentConfig => ({
     env: process.env.NODE_ENV || 'development',
   },
   superUser: {
-    username: process.env.SUPER_USER_USERNAME || 'admin',
-    password: process.env.SUPER_USER_PASSWORD || 'admin123',
+    username: process.env.SUPER_USER_USERNAME,
+    password: process.env.SUPER_USER_PASSWORD,
+    email: process.env.SUPER_USER_EMAIL || 'admin@sistema.com',
+    fullName: process.env.SUPER_USER_FULLNAME || 'Administrador del Sistema',
+    phone: process.env.SUPER_USER_PHONE || '0000000000',
   },
   port: parseInt(process.env.PORT || '3000', 10),
 });

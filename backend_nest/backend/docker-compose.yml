@@ -1,4 +1,33 @@
 services:
+  # ----------------------------------------------------
+  # Backend NestJS API
+  # ----------------------------------------------------
+#  backend:
+#   build:
+#     context: .
+#      dockerfile: Dockerfile
+#    container_name: backend-nest
+#    restart: unless-stopped
+#    depends_on:
+#      - mongodb
+#    environment:
+#      - NODE_ENV=production
+#      - MONGO_USER=${MONGO_USER}
+#      - MONGO_PASS=${MONGO_PASS}
+#      - MONGO_DB_NAME=${MONGO_DB_NAME}
+#      - MONGO_PORT=27017
+#      - JWT_SECRET=${JWT_SECRET}
+#      - SUPER_USER_USERNAME=${SUPER_USER_USERNAME}
+#      - SUPER_USER_PASSWORD=${SUPER_USER_PASSWORD}
+#      - PORT=3000
+#    ports:
+#      - "3000:3000"
+#    networks:
+#      - mi-red
+
+  # ----------------------------------------------------
+  # MongoDB
+  # ----------------------------------------------------
   mongodb:
     container_name: mi-mongo
     image: mongodb/mongodb-community-server:7.0-ubi8
@@ -19,24 +48,9 @@ services:
     networks:
       - mi-red
 
-  mongo-express:
-    container_name: mi-mongo-express
-    image: mongo-express:1.0.2-20
-    restart: unless-stopped
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017/?authSource=admin"
-      ME_CONFIG_BASICAUTH: "true"
-      ME_CONFIG_BASICAUTH_USERNAME: "admin"
-      ME_CONFIG_BASICAUTH_PASSWORD: "superseguro123"
-      ME_CONFIG_SITE_SESSIONSECRET: "secret"
-    networks:
-      - mi-red
-
+  # ----------------------------------------------------
+  # EMQX Broker MQTT
+  # ----------------------------------------------------
   emqx:
     image: emqx/emqx:5.7.0
     container_name: mi-broker-emqx
@@ -57,4 +71,3 @@ networks:
 
 volumes:
   datos-mongo:
-

@@ -1,0 +1,110 @@
+services:
+  # ----------------------------------------------------
+  # Traefik (Manejando HTTPS y MQTTS)
+  # ----------------------------------------------------
+  traefik:
+    image: traefik:v3.1
+    container_name: mi-traefik-proxy
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.mqtts.address=:8883"
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8883:8883"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik-data:/data
+    networks:
+      - mi-red
+
+  # ----------------------------------------------------
+  # Backend NestJS API
+  # ----------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-nest
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    environment:
+      - NODE_ENV=production
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASS=${MONGO_PASS}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_PORT=27017
+      - JWT_SECRET=${JWT_SECRET}
+      - SUPER_USER_USERNAME=${SUPER_USER_USERNAME}
+      - SUPER_USER_PASSWORD=${SUPER_USER_PASSWORD}
+      - DOMAIN_URL=${DOMAIN_URL}
+      - PORT=3000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN_URL}`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls=true"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+    networks:
+      - mi-red
+
+  # ----------------------------------------------------
+  # MongoDB
+  # ----------------------------------------------------
+  mongodb:
+    container_name: mi-mongo
+    image: mongodb/mongodb-community-server:7.0-ubi8
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASS}"
+    volumes:
+      - datos-mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - mi-red
+
+  # ----------------------------------------------------
+  # EMQX Broker MQTT
+  # ----------------------------------------------------
+  emqx:
+    image: emqx/emqx:5.7.0
+    container_name: mi-broker-emqx
+    restart: unless-stopped
+    environment:
+      - "EMQX_LISTENERS__TCP__DEFAULT__BIND=0.0.0.0:1883"
+      - "EMQX_AUTH__USER__1__USERNAME=${MOSQUITTO_USER}"
+      - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
+      - "EMQX_NODE__COOKIE=${EMQX_NODE_COOKIE}"
+    ports:
+      - "1883:1883"
+      - "18083:18083"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.emqx.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.emqx.entrypoints=mqtts"
+      - "traefik.tcp.services.emqx.loadbalancer.server.port=1883"
+    networks:
+      - mi-red
+
+networks:
+  mi-red:
+
+volumes:
+  datos-mongo:
+  traefik-data:

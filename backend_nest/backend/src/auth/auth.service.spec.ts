@@ -48,7 +48,7 @@ describe('AuthService', () => {
         mustChangePassword: true,
       };
 
-      (bcrypt.compare as jest.MockedFunction<typeof bcrypt.compare>).mockResolvedValue(true);
+      (bcrypt.compare as jest.MockedFunction<typeof bcrypt.compare>).mockResolvedValue(true as never);
       mockUsersService.findByUsername.mockResolvedValue(mockUser);
 
       const result = await service.validateUser('testuser', 'testpass');
@@ -82,7 +82,7 @@ describe('AuthService', () => {
         password: 'hashedPassword',
       };
 
-      (bcrypt.compare as jest.MockedFunction<typeof bcrypt.compare>).mockResolvedValue(false);
+      (bcrypt.compare as jest.MockedFunction<typeof bcrypt.compare>).mockResolvedValue(false as never);
       mockUsersService.findByUsername.mockResolvedValue(mockUser);
 
       const result = await service.validateUser('testuser', 'wrongpass');
@@ -95,15 +95,22 @@ describe('AuthService', () => {
   describe('login', () => {
     it('should return access token', async () => {
       const mockUser = {
+        _id: 'userId',
         username: 'testuser',
         email: 'test@example.com',
+        admin: false,
+        isSuperAdmin: false,
+        mustChangePassword: false,
       };
 
       mockJwtService.sign.mockReturnValue('fake-jwt-token');
 
       const result = await service.login(mockUser);
 
-      expect(mockJwtService.sign).toHaveBeenCalledWith(mockUser);
+      expect(mockJwtService.sign).toHaveBeenCalledWith({
+        sub: 'userId',
+        username: 'testuser',
+      });
       expect(result).toEqual({
         access_token: 'fake-jwt-token',
       });
