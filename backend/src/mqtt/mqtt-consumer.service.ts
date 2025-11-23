@@ -14,25 +14,25 @@ export class MqttConsumerService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly configService: ConfigService,
     private readonly temperatureHistoryService: TemperatureHistoryService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
-    // Construir la URL del broker MQTT
-    const host = this.configService.get<string>('mosquitto.host') || 'localhost';
-    const port = this.configService.get<number>('mosquitto.port') || 1883;
-    const user = this.configService.get<string>('mosquitto.user') || 'admin';
-    const password = this.configService.get<string>('mosquitto.password') || 'public';
-    
-    const mqttBrokerUrl = this.configService.get<string>('mosquitto.brokerUrl') || 
-                         `mqtt://${user}:${password}@${host}:${port}`;
-    
+    // Usar MQTT_BROKER_URL de variable de entorno (producción) o construir URL (desarrollo)
+    const mqttBrokerUrl = process.env.MQTT_BROKER_URL || (() => {
+      const host = this.configService.get<string>('mosquitto.host') || 'localhost';
+      const port = this.configService.get<number>('mosquitto.port') || 1883;
+      const user = this.configService.get<string>('mosquitto.user') || 'admin';
+      const password = this.configService.get<string>('mosquitto.password') || 'public';
+      return `mqtt://${user}:${password}@${host}:${port}`;
+    })();
+
     this.logger.log(`Intentando conectar al broker MQTT en ${mqttBrokerUrl}...`);
     this.client = connect(mqttBrokerUrl);
-    
+
     return new Promise<void>((resolve, reject) => {
       this.client.on('connect', () => {
         this.logger.log('✅ Conectado al broker MQTT para consumir mensajes de temperatura');
-        
+
         // Suscribirse a los tópicos relevantes
         this.client.subscribe([this.TOPIC_HISTORY, this.TOPIC_REALTIME], (err) => {
           if (err) {
@@ -81,7 +81,7 @@ export class MqttConsumerService implements OnModuleInit, OnModuleDestroy {
             messageJson.temperatura,
             new Date(messageJson.timestamp * 1000) // Convertir de timestamp Unix a Date
           );
-          
+
           this.logger.log(`✅ Dato de ${equipmentName} guardado en la base de datos.`);
         } else {
           this.logger.log(`HISTORIAL: Dato de '${messageJson.equipo}' ignorado (temperatura inválida).`);

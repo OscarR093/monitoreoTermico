@@ -37,14 +37,17 @@ export class WebSocketGatewayService
   private async initializeMqttConnection() {
     const mqtt = await import('mqtt');
 
-    // Construir la URL del broker MQTT
-    const host = this.configService.get<string>('mosquitto.host') || 'localhost';
-    const port = this.configService.get<number>('mosquitto.port') || 1883;
+    // Usar MQTT_BROKER_URL de variable de entorno (producción) o construir URL (desarrollo)
+    const mqttBrokerUrl = process.env.MQTT_BROKER_URL || (() => {
+      const host = this.configService.get<string>('mosquitto.host') || 'localhost';
+      const port = this.configService.get<number>('mosquitto.port') || 1883;
+      const user = this.configService.get<string>('mosquitto.user') || 'admin';
+      const password = this.configService.get<string>('mosquitto.password') || 'public';
+      return `mqtt://${user}:${password}@${host}:${port}`;
+    })();
+
     const user = this.configService.get<string>('mosquitto.user') || 'admin';
     const password = this.configService.get<string>('mosquitto.password') || 'public';
-
-    const mqttBrokerUrl = this.configService.get<string>('mosquitto.brokerUrl') ||
-      `mqtt://${user}:${password}@${host}:${port}`;
 
     this.logger.log(`Intentando conectar al broker MQTT para WebSocket en ${mqttBrokerUrl}...`);
     this.mqttClient = mqtt.connect(mqttBrokerUrl, {
