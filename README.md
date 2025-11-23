@@ -48,15 +48,53 @@ La arquitectura del sistema se compone de los siguientes componentes:
 
 | Componente | Tecnología | Versión |
 |------------|------------|---------|
-| Frontend | React, Vite | Moderno |
-| Backend | Node.js, Express | ES6+ |
-| WebSockets | ws | Latest |
+| Frontend | React + Vite | Moderno |
+| Backend | **NestJS** (TypeScript) | **v10** |
+| WebSockets | ws (nativo) | Latest |
 | Base de Datos | MongoDB Community Server | 7.0 |
 | Broker Mensajes | EMQX | 5.7.0 |
-| Gateway | Python | 3.x |
+| Gateway | Python + Snap7 | 3.x |
 | Despliegue | Docker, Docker Compose | Latest |
-| Proxy Inverso | Traefik | v3.1 |
+| Proxy Inverso | Traefik | **v3.6** |
 | Protocolo Comunicación | MQTT/MQTTS | Standard |
+| Alertas | Telegram Bot API | Latest |
+
+## 🆕 Novedades v3.0
+
+### Migración a NestJS
+
+La versión 3.0 representa una **migración completa del backend** de Express a NestJS, manteniendo 100% de compatibilidad con el frontend existente mientras se introducen mejoras significativas:
+
+**Mejoras de Arquitectura:**
+- ✅ **Inyección de dependencias** - Código más modular y testeable
+- ✅ **DTOs con validación** - Validación automática de datos de entrada
+- ✅ **Guards de autenticación** - Control de acceso robusto
+- ✅ **Tipado fuerte** - TypeScript en todo el backend
+- ✅ **Documentación Swagger** - API autodocumentada
+
+**Mejoras de Seguridad:**
+- 🔐 Cookies httpOnly para tokens JWT
+- 🔐 Validación de entradas con class-validator
+- 🔐 Control de autorización por roles mejorado
+- 🔐 Manejo seguro de sesiones
+
+**Sistema de Alertas por Telegram:**
+- 📱 Notificaciones push cuando temperaturas salen de rango
+- 📱 Configuración YAML para rangos por equipo
+- 📱 Alertas efímeras (no se guardan en BD)
+- 📱 Cooldown automático basado en intervalo de guardado
+
+**Optimizaciones Móviles:**
+- 📱 Filtros de tiempo (6h, 12h, 24h) en gráficas
+- 📱 Sampling automático de datos en móvil
+- 📱 Pinch zoom y gestos táctiles mejorados
+- 📱 UI adaptativa para pantallas pequeñas
+
+**Calidad de Código:**
+- ✅ 45+ pruebas unitarias pasando
+- ✅ Cobertura completa de servicios y controladores
+- ✅ Integración continua lista
+- ✅ Código mantenible y escalable
 
 ## 🔄 Flujo de Datos
 
@@ -166,7 +204,7 @@ services:
   # Traefik (Manejando HTTPS y MQTTS)
   # ----------------------------------------------------
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.6
     container_name: mi-traefik-proxy
     restart: unless-stopped
     command:
@@ -191,10 +229,10 @@ services:
       - mi-red
 
   # ----------------------------------------------------
-  # Aplicación Node.js (sin cambios)
+  # Aplicación Node.js (NestJS v3.0)
   # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:2.5
+    image: oscarr093/monitoreotermico:3.0
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     depends_on:
