@@ -13,9 +13,9 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler, // Importar para el relleno del área
-  Zoom // Importar para zoom interactivo
+  Filler
 } from 'chart.js'
+import zoomPlugin from 'chartjs-plugin-zoom'
 
 ChartJS.register(
   CategoryScale,
@@ -26,7 +26,7 @@ ChartJS.register(
   Tooltip,
   Legend,
   Filler,
-  Zoom
+  zoomPlugin
 )
 
 // --- Componentes de UI para estados ---
