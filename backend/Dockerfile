@@ -44,5 +44,8 @@ COPY --from=backend-builder /usr/src/app/tsconfig*.json ./
 # Copiamos la carpeta 'dist' construida del frontend
 COPY --from=frontend-builder /usr/src/app/dist ./frontend_dist
 
+# Copiamos la carpeta de configuración (incluye alerts.config.yaml)
+COPY --from=backend-builder /usr/src/app/config ./config
+
 EXPOSE 3000
 CMD [ "node", "dist/main.js" ]
