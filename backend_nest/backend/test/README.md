@@ -12,7 +12,7 @@ test/
 ├── temperature-history.e2e-spec.ts    # Pruebas e2e para el módulo de historial
 ├── jest-e2e.json                      # Configuración de Jest para pruebas e2e
 ├── auth/
-│   ├── auth.controller.spec.ts        # Pruebas unitarias para controlador de autenticación
+│   ├── auth.controller.spec.ts        # Pruebas unitarias para controlador de autenticación (incluye RBAC)
 │   ├── auth.service.spec.ts           # Pruebas unitarias para servicio de autenticación
 │   └── auth.e2e-spec.ts               # Pruebas e2e para endpoints de autenticación
 ├── users/
@@ -20,7 +20,6 @@ test/
 │   ├── users.service.spec.ts          # Pruebas unitarias para servicio de usuarios
 │   └── users.e2e-spec.ts              # Pruebas e2e para endpoints de usuarios
 ├── temperature-history/
-│   ├── temperature-history.controller.spec.ts  # Pruebas unitarias para controlador de historial
 │   ├── temperature-history.service.spec.ts     # Pruebas unitarias para servicio de historial
 │   └── temperature-history.e2e-spec.ts         # Pruebas e2e para endpoints de historial
 ├── mqtt/
@@ -53,12 +52,16 @@ test/
 - Login y generación de tokens JWT
 - Validación de credenciales
 - Middleware de autenticación
+- **RBAC (Role-Based Access Control)**:
+    - Verificación de permisos para creación de usuarios
+    - Restricción de creación de administradores
 
 ### Módulo de Usuarios (`users/`)
 - CRUD completo de usuarios
 - Validación de unicidad de username/email
 - Actualización de perfiles
 - Eliminación de usuarios
+- Verificación de permisos en operaciones sensibles
 
 ### Módulo de Historial de Temperaturas (`temperature-history/`)
 - Almacenamiento automático de datos de temperatura
@@ -124,6 +127,7 @@ npm run test:e2e
 - Validación de parámetros de entrada
 - Verificación de códigos de estado HTTP
 - Prueba de middleware de autenticación
+- **Pruebas de Seguridad**: Verificación de Guards y Roles
 
 ### 3. Pruebas de Integración
 - Prueba de flujos completos de negocio

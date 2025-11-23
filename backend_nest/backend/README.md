@@ -5,17 +5,19 @@ Sistema backend para la aplicación de monitoreo térmico con funcionalidades co
 ## Características
 
 - **Autenticación JWT**: Sistema completo de login y registro de usuarios
-- **Gestión de usuarios**: CRUD completo para la administración de usuarios
+- **Gestión de usuarios**: CRUD optimizado para la administración de usuarios
 - **Historial de temperaturas**: Almacenamiento automático con expiración de 30 días
 - **Comunicación en tiempo real**: WebSocket Gateway para datos de temperatura en vivo
 - **Conexión MQTT**: Integración con broker EMQX para comunicación con gateways PLC
-- **Seguridad robusta**: Encriptación de contraseñas con bcrypt y tokens JWT
+- **Seguridad robusta**: 
+    - Encriptación de contraseñas con bcrypt
+    - Tokens JWT para autenticación
+    - **RBAC (Role-Based Access Control)**: Control de acceso basado en roles (Admin, SuperAdmin)
+    - Protección de rutas críticas
 - **Documentación API**: Swagger integrado para documentación interactiva
 - **Validación de configuración**: Sistema centralizado de configuración con validación
 - **Pruebas unitarias**: Cobertura completa de pruebas para servicios y controladores
 - **Validación de datos**: Validación completa de entrada con class-validator
-- **Gestión de roles**: Soporte para roles de usuario (admin, superadmin)
-- **Seguridad de contraseñas**: Filtros automáticos para evitar exposición de contraseñas
 
 ## Tecnologías usadas
 
@@ -50,7 +52,7 @@ src/
 │   ├── schemas/       # Esquemas de Mongoose
 │   ├── temperature-history.module.ts
 │   ├── temperature-history.service.ts
-│   └── temperature-history.controller.ts
+│   └── legacy-temperature-history.controller.ts # Controlador de compatibilidad
 ├── mqtt/              # Módulo de conexión MQTT
 │   ├── mqtt.module.ts
 │   └── mqtt-consumer.service.ts
@@ -122,75 +124,55 @@ npm run start:prod
 
 ## Endpoints de autenticación
 
-### Registro de usuario
-- `POST /auth/register`
+### Registro de usuario (Protegido)
+- `POST /auth/register` (alias `/register`)
+- **Seguridad**: Requiere rol de **Administrador**.
+- **Nota**: Para crear un usuario con rol de administrador, se requiere ser **SuperAdmin**.
 - Campos requeridos: `username`, `password`
-- Campos opcionales: `email`, `fullName`, `cellPhone`
+- Campos opcionales: `email`, `fullName`, `cellPhone`, `admin`
 
 ### Login de usuario
-- `POST /auth/login`
+- `POST /auth/login` (alias `/login`)
 - Campos requeridos: `username`, `password`
-- Retorna JWT token
+- Retorna JWT token y establece cookie `access_token`.
+
+### Logout (Protegido)
+- `POST /auth/logout` (alias `/logout`)
+- **Seguridad**: Requiere estar autenticado.
+- Limpia la cookie de sesión.
 
 ## Endpoints de usuarios
 
-### Gestión de usuarios (CRUD completo)
+### Gestión de usuarios
 
 #### Crear usuario
 - `POST /users`
+- **Seguridad**: Requiere rol de **Administrador**.
 - Campos requeridos: `username`, `password`
-- Campos opcionales: `email`, `fullName`, `cellPhone`
-- Retorna: El usuario creado (sin contraseña)
 
 #### Listar usuarios
 - `GET /users`
+- **Seguridad**: Requiere estar autenticado.
 - Retorna: Array de usuarios (sin contraseñas)
 
-#### Obtener usuario por ID
-- `GET /users/:id`
-- Retorna: Usuario específico (sin contraseña)
-
 #### Actualizar usuario
-- `PATCH /users/:id`
+- `PUT /users/:id`
+- **Seguridad**: Un usuario puede actualizarse a sí mismo. Un **Administrador** puede actualizar a cualquier usuario.
 - Campos actualizables: `username`, `password`, `email`, `fullName`, `cellPhone`, `admin`, `isSuperAdmin`, `mustChangePassword`
-- Valida unicidad de username y email
-- Retorna: Usuario actualizado (sin contraseña)
 
 #### Eliminar usuario
 - `DELETE /users/:id`
-- Retorna: Código 204 sin contenido
+- **Seguridad**:
+    - **SuperAdmin**: Puede eliminar a cualquier usuario (excepto a sí mismo).
+    - **Admin**: Puede eliminar usuarios normales. No puede eliminar a otros administradores.
+- Retorna: Mensaje de confirmación.
 
 ## Endpoints de historial de temperaturas
 
 ### Consulta de historial
-
-#### Consultar historial general
-- `GET /temperature-history`
-- Parámetros: `equipment`, `limit`, `sort`
-- Retorna: Array de registros de temperatura
-
-#### Filtrar historial
-- `GET /temperature-history/filter`
-- Parámetros: `equipment`, `startDate`, `endDate`, `minTemperature`, `maxTemperature`, `limit`
-- Retorna: Array de registros filtrados
-
-#### Consultar historial por equipo
-- `GET /temperature-history/equipment/:equipmentName`
-- Parámetros: `limit`
-- Retorna: Array de registros para un equipo específico
-
-#### Endpoint de compatibilidad (frontend)
-- `GET /temperature-history/thermocouple-history/:equipmentName`
-- Parámetros: `limit`
-- Retorna: Array de registros para compatibilidad con frontend existente
-
-#### Listar equipos
-- `GET /temperature-history/equipment-list`
-- Retorna: Array de nombres de equipos únicos
-
-#### Estadísticas de equipo
-- `GET /temperature-history/equipment/:equipmentName/stats`
-- Retorna: Estadísticas (conteo, promedio, min, max, última lectura) para un equipo específico
+- `GET /thermocouple-history/:equipmentName`
+- **Seguridad**: Requiere estar autenticado.
+- Retorna: Array de registros históricos para el equipo solicitado.
 
 ## WebSocket y comunicación en tiempo real
 
@@ -230,21 +212,14 @@ npm run test:watch
 npm run test:cov
 ```
 
-### Cobertura actual
-- **Usuarios**: CRUD completo con pruebas unitarias (create, findAll, findById, update, remove)
-- **Autenticación**: Registro, login y validación de credenciales
-- **Historial de temperaturas**: Pruebas unitarias y e2e para servicio y controlador
-- **WebSocket**: Pruebas unitarias para gateway de comunicación en tiempo real
-- **Servicios**: Pruebas completas con mocks adecuados
-- **Controladores**: Pruebas de integración con servicios
-
 ## Seguridad
 
-- Las contraseñas son encriptadas usando bcrypt con salt configurable
-- Tokens JWT con expiración configurable
-- Validación de entrada de datos
-- Manejo seguro de errores
-- Conexión segura con EMQX Broker (MQTTS para conexiones externas)
+- **Encriptación**: Las contraseñas son encriptadas usando bcrypt.
+- **JWT**: Tokens firmados con expiración configurable.
+- **Cookies HttpOnly**: Almacenamiento seguro del token para prevenir XSS.
+- **RBAC**: Control de acceso estricto para operaciones sensibles (crear/eliminar usuarios).
+- **Validación**: `class-validator` y `class-transformer` para sanitización de entrada.
+- **Manejo de Errores**: Excepciones HTTP estandarizadas.
 
 ## Contribución
 
@@ -253,13 +228,3 @@ npm run test:cov
 3. Haz commit de tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Haz push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
-
-## Licencia
-
-Este proyecto está licenciado bajo [TU LICENCIA AQUÍ]
-
-## Contacto
-
-Equipo de desarrollo - [tu-email@ejemplo.com]
-
-Proyecto Link: [https://github.com/tu-usuario/tu-proyecto](https://github.com/tu-usuario/tu-proyecto)

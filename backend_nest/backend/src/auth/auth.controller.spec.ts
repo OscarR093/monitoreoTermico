@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -56,7 +56,14 @@ describe('AuthController', () => {
         toObject: jest.fn().mockReturnValue(createdUser),
       });
 
-      const result = await controller.register(createUserDto);
+      const mockReq = {
+        user: {
+          admin: true,
+          isSuperAdmin: false
+        }
+      };
+
+      const result = await controller.register(createUserDto, mockReq);
 
       expect(mockUsersService.create).toHaveBeenCalledWith(createUserDto);
       expect(result).toEqual({
@@ -70,6 +77,56 @@ describe('AuthController', () => {
       });
       expect((result as any).password).toBeUndefined();
     });
+
+    it('should throw ForbiddenException if user is not admin', async () => {
+      const createUserDto: CreateUserDto = {
+        username: 'newuser',
+        password: 'password',
+      };
+
+      const mockReq = {
+        user: { admin: false }
+      };
+
+      await expect(controller.register(createUserDto, mockReq)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException if non-superadmin tries to create admin', async () => {
+      const createUserDto: CreateUserDto = {
+        username: 'newadmin',
+        password: 'password',
+        admin: true
+      };
+
+      const mockReq = {
+        user: { admin: true, isSuperAdmin: false }
+      };
+
+      await expect(controller.register(createUserDto, mockReq)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should allow superadmin to create admin', async () => {
+      const createUserDto: CreateUserDto = {
+        username: 'newadmin',
+        password: 'password',
+        admin: true
+      };
+
+      const mockReq = {
+        user: { admin: true, isSuperAdmin: true }
+      };
+
+      const createdUser = { ...createUserDto, _id: 'newId' };
+      mockUsersService.create.mockResolvedValue({
+        toObject: jest.fn().mockReturnValue(createdUser),
+      });
+
+      const result = await controller.register(createUserDto, mockReq);
+
+      expect(mockUsersService.create).toHaveBeenCalledWith(createUserDto);
+      const { password, ...expectedUserWithoutPassword } = createdUser;
+      expect(result).toEqual(expectedUserWithoutPassword);
+    });
   });
 
   describe('login', () => {
@@ -77,7 +134,7 @@ describe('AuthController', () => {
       const loginDto = { username: 'testuser', password: 'testpass' };
       const mockUser = { username: 'testuser', email: 'test@example.com' };
       const mockToken = { access_token: 'jwt-token' };
-      
+
       // Mock del objeto de respuesta
       const mockResponse = {
         cookie: jest.fn().mockReturnThis(),

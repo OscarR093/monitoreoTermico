@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { HydratedDocument } from 'mongoose';
 import { User } from '../users/schemas/user.schema';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -18,7 +18,8 @@ export class AuthController {
   ) { }
 
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user' })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Register a new user (Admin only)' })
   @ApiBody({ type: CreateUserDto })
   @ApiResponse({
     status: 201,
@@ -47,6 +48,10 @@ export class AuthController {
   @ApiResponse({
     status: 409,
     description: 'Conflict - User already exists'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires Admin role'
   })
   @UseGuards(JwtAuthGuard)
   async register(@Body() dto: CreateUserDto, @Request() req) {
@@ -105,6 +110,7 @@ export class AuthController {
 
   @Get('check')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Check user session' })
   @ApiResponse({
     status: 200,
@@ -140,6 +146,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout user and clear session' })
   @ApiResponse({
     status: 200,

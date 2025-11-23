@@ -10,7 +10,7 @@ describe('AppController', () => {
   const mockUsersService = {
     findAll: jest.fn(),
   };
-  
+
   const mockConfigService = {
     get: jest.fn(),
   };
@@ -28,9 +28,11 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  describe('getEnv', () => {
+    it('should return environment variables', () => {
+      const result = appController.getEnv();
+      expect(result).toHaveProperty('APP_ENV');
+      expect(result).toHaveProperty('WS_HOST');
     });
   });
 });

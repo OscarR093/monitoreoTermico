@@ -113,6 +113,7 @@ describe('AuthService', () => {
       });
       expect(result).toEqual({
         access_token: 'fake-jwt-token',
+        user: mockUser
       });
     });
   });

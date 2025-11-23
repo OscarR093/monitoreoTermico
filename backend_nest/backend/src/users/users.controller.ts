@@ -12,7 +12,7 @@ import {
   UseGuards,
   Request
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -20,6 +20,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
 @ApiTags('users') // Etiqueta para agrupar en Swagger
+@ApiBearerAuth()
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
@@ -124,63 +125,14 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a user by ID' })
-  @ApiParam({ name: 'id', description: 'User ID', example: '6739f1e4b8c8d8e8f8a1b2c3' })
-  @ApiResponse({
-    status: 200,
-    description: 'User found',
-    schema: {
-      example: {
-        _id: '6739f1e4b8c8d8e8f8a1b2c3',
-        username: 'user1',
-        email: 'user1@example.com',
-        fullName: 'User One',
-        cellPhone: '+1234567890',
-        admin: false,
-        isSuperAdmin: false,
-        mustChangePassword: true,
-        createdAt: '2025-11-15T10:00:00.000Z',
-        updatedAt: '2025-11-15T10:00:00.000Z'
-      }
-    }
-  })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  async findOne(@Param('id') id: string) {
-    const user = await this.usersService.findById(id);
-    if (!user) {
-      throw new Error('User not found');
-    }
-    return user;
-  }
 
-  @Patch(':id')
+
+
+
+  @Put(':id') // Método separado explícitamente para PUT
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update a user by ID' })
-  @ApiParam({ name: 'id', description: 'User ID', example: '6739f1e4b8c8d8e8f8a1b2c3' })
-  @ApiBody({ type: UpdateUserDto })
-  @ApiResponse({
-    status: 200,
-    description: 'User updated successfully',
-    schema: {
-      example: {
-        _id: '6739f1e4b8c8d8e8f8a1b2c3',
-        username: 'updateduser',
-        email: 'updateduser@example.com',
-        fullName: 'Updated User',
-        cellPhone: '+1111111111',
-        admin: true,
-        isSuperAdmin: false,
-        mustChangePassword: false,
-        createdAt: '2025-11-15T10:00:00.000Z',
-        updatedAt: '2025-11-16T12:00:00.000Z'
-      }
-    }
-  })
-  @ApiResponse({ status: 403, description: 'Access denied - Insufficient permissions' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 409, description: 'Username or email already exists' })
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Request() req) {
+  @ApiOperation({ summary: 'Update a user by ID (Legacy PUT)' })
+  async updateLegacy(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Request() req) {
     // Verificar si el usuario intenta actualizarse a sí mismo o si es admin
     // req.user ahora es el documento completo de mongoose, por lo que usamos _id
     if (req.user._id.toString() !== id && !req.user.admin) {
@@ -193,13 +145,6 @@ export class UsersController {
     }
 
     return this.usersService.update(id, updateUserDto);
-  }
-
-  @Put(':id') // Método separado explícitamente para PUT
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update a user by ID (Legacy PUT)' })
-  async updateLegacy(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Request() req) {
-    return this.update(id, updateUserDto, req);
   }
 
   @Delete(':id')

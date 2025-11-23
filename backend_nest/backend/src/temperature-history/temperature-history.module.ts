@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TemperatureHistory, TemperatureHistorySchema } from './schemas/temperature-history.schema';
 import { TemperatureHistoryService } from './temperature-history.service';
-import { TemperatureHistoryController } from './temperature-history.controller';
 import { LegacyTemperatureHistoryController } from './legacy-temperature-history.controller';
 
 @Module({
@@ -17,7 +16,7 @@ import { LegacyTemperatureHistoryController } from './legacy-temperature-history
     ]),
   ],
   providers: [TemperatureHistoryService],
-  controllers: [TemperatureHistoryController, LegacyTemperatureHistoryController],
+  controllers: [LegacyTemperatureHistoryController],
   exports: [TemperatureHistoryService], // Exportar el servicio para que pueda ser usado por otros módulos
 })
 export class TemperatureHistoryModule { }

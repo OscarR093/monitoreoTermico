@@ -44,11 +44,11 @@ describe('UsersController', () => {
         fullName: 'Test User',
         cellPhone: '+1234567890',
       };
-      
+
       const mockRequest = {
         user: { userId: 'adminId', admin: true }
       };
-      
+
       const expectedResult = {
         _id: '6739f1e4b8c8d8e8f8a1b2c3',
         username: 'testuser',
@@ -59,7 +59,7 @@ describe('UsersController', () => {
         isSuperAdmin: false,
         mustChangePassword: true,
       };
-      
+
       jest.spyOn(service, 'create').mockResolvedValue(expectedResult as any);
 
       const result = await controller.create(createUserDto, mockRequest);
@@ -93,7 +93,7 @@ describe('UsersController', () => {
           mustChangePassword: false,
         },
       ];
-      
+
       jest.spyOn(service, 'findAll').mockResolvedValue(expectedUsers as any);
 
       const result = await controller.findAll();
@@ -103,45 +103,19 @@ describe('UsersController', () => {
     });
   });
 
-  describe('findOne', () => {
-    it('should return a user by ID', async () => {
-      const expectedUser = {
-        _id: '6739f1e4b8c8d8e8f8a1b2c3',
-        username: 'testuser',
-        email: 'test@example.com',
-        fullName: 'Test User',
-        cellPhone: '+1234567890',
-        admin: false,
-        isSuperAdmin: false,
-        mustChangePassword: true,
-      };
-      
-      jest.spyOn(service, 'findById').mockResolvedValue(expectedUser as any);
 
-      const result = await controller.findOne('6739f1e4b8c8d8e8f8a1b2c3');
 
-      expect(result).toEqual(expectedUser);
-      expect(service.findById).toHaveBeenCalledWith('6739f1e4b8c8d8e8f8a1b2c3');
-    });
-
-    it('should throw error if user not found', async () => {
-      jest.spyOn(service, 'findById').mockResolvedValue(null);
-
-      await expect(controller.findOne('nonexistent')).rejects.toThrow();
-    });
-  });
-
-  describe('update', () => {
+  describe('updateLegacy', () => {
     it('should update a user', async () => {
       const updateUserDto: UpdateUserDto = {
         fullName: 'Updated Name',
         email: 'updated@example.com'
       };
-      
+
       const mockRequest = {
-        user: { userId: '6739f1e4b8c8d8e8f8a1b2c3', admin: true }
+        user: { _id: '6739f1e4b8c8d8e8f8a1b2c3', admin: true }
       };
-      
+
       const expectedUser = {
         _id: '6739f1e4b8c8d8e8f8a1b2c3',
         username: 'testuser',
@@ -152,10 +126,10 @@ describe('UsersController', () => {
         isSuperAdmin: false,
         mustChangePassword: true,
       };
-      
+
       jest.spyOn(service, 'update').mockResolvedValue(expectedUser as any);
 
-      const result = await controller.update('6739f1e4b8c8d8e8f8a1b2c3', updateUserDto, mockRequest);
+      const result = await controller.updateLegacy('6739f1e4b8c8d8e8f8a1b2c3', updateUserDto, mockRequest);
 
       expect(result).toEqual(expectedUser);
       expect(service.update).toHaveBeenCalledWith('6739f1e4b8c8d8e8f8a1b2c3', updateUserDto);
@@ -165,15 +139,15 @@ describe('UsersController', () => {
   describe('remove', () => {
     it('should remove a user', async () => {
       const mockRequest = {
-        user: { userId: 'adminId', admin: true, isSuperAdmin: true }
+        user: { _id: 'adminId', admin: true, isSuperAdmin: true }
       };
-      
+
       const mockUser = {
         _id: '6739f1e4b8c8d8e8f8a1b2c3',
         username: 'testuser',
         isSuperAdmin: false,
       };
-      
+
       jest.spyOn(service, 'findById').mockResolvedValue(mockUser as any);
       jest.spyOn(service, 'remove').mockResolvedValue(true);
 
@@ -184,9 +158,9 @@ describe('UsersController', () => {
 
     it('should throw error if user not found for deletion', async () => {
       const mockRequest = {
-        user: { userId: 'adminId', admin: true, isSuperAdmin: true }
+        user: { _id: 'adminId', admin: true, isSuperAdmin: true }
       };
-      
+
       jest.spyOn(service, 'findById').mockResolvedValue(null);
 
       await expect(controller.remove('nonexistent', mockRequest)).rejects.toThrow();
