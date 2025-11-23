@@ -14,7 +14,7 @@ alerts:
     # IMPORTANTE: Los nombres deben coincidir exactamente con los del gateway
   equipments:
     - name: "Torre Fusora"
-      minTemp: 715
+      minTemp: 720
       maxTemp: 790
       enabled: true
       description: "Torre Fusora"

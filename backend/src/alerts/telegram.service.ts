@@ -37,15 +37,10 @@ export class TelegramService {
         const message = `
 ${emoji} *ALERTA DE TEMPERATURA*
 
-*Equipo:* ${equipmentName}
-*Temperatura:* ${temperature}°C
-*Rango:* ${min}°C - ${max}°C
-*Estado:* ${status}
-
-📅 ${new Date().toLocaleString('es-ES', {
-            dateStyle: 'short',
-            timeStyle: 'medium'
-        })}
+📍 *Equipo:* ${equipmentName}
+🌡️ *Temperatura:* *${temperature}°C*
+📊 *Rango permitido:* ${min}°C - ${max}°C
+⚡ *Estado:* ${status}
     `.trim();
 
         try {
