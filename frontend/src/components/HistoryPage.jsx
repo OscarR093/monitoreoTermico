@@ -60,14 +60,19 @@ const HistoryPage = ({ onLogout, user }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [view, setView] = useState('chart') // Estado para controlar la vista: 'chart' o 'table'
+  const [timeRange, setTimeRange] = useState(24) // Horas a mostrar: 6, 12, 24
   const scrollContainerRef = useRef(null)
+  const chartRef = useRef(null)
+
+  // Detectar si es móvil
+  const isMobile = window.innerWidth < 768
 
   // Efecto para hacer scroll al final (derecha) cuando se carga la gráfica
   useEffect(() => {
     if (view === 'chart' && scrollContainerRef.current) {
       scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth
     }
-  }, [historyData, view])
+  }, [historyData, view, timeRange])
 
   useEffect(() => {
     const fetchHistoryData = async () => {
@@ -89,14 +94,38 @@ const HistoryPage = ({ onLogout, user }) => {
 
   const handleBack = () => navigate('/')
 
-  // Datos ordenados cronológicamente para el gráfico (más antiguos a la izquierda)
-  const chartDataSorted = [...historyData].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+  // Función para resetear zoom
+  const handleResetZoom = () => {
+    if (chartRef.current) {
+      chartRef.current.resetZoom()
+    }
+  }
+
+  // Filtrar datos según el rango de tiempo seleccionado
+  const getFilteredData = () => {
+    const now = new Date()
+    const cutoffTime = new Date(now.getTime() - (timeRange * 60 * 60 * 1000))
+    return historyData.filter(data => new Date(data.timestamp) >= cutoffTime)
+  }
+
+  // Datos filtrados y ordenados cronológicamente para el gráfico
+  const filteredData = getFilteredData()
+  const chartDataSorted = [...filteredData].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+
+  // En móvil, reducir puntos mostrando solo cada N puntos
+  const samplingRate = isMobile && chartDataSorted.length > 50 ? Math.ceil(chartDataSorted.length / 50) : 1
+  const sampledData = chartDataSorted.filter((_, index) => index % samplingRate === 0)
 
   const chartData = {
-    labels: chartDataSorted.map(data => new Date(data.timestamp).toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit' })),
+    labels: sampledData.map(data => new Date(data.timestamp).toLocaleString('es-ES', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })),
     datasets: [{
       label: `Temperatura (°C) de ${nombreEquipo}`,
-      data: chartDataSorted.map(data => data.temperatura),
+      data: sampledData.map(data => data.temperatura),
       borderColor: '#dc2626', // red-600
       backgroundColor: 'rgba(220, 38, 38, 0.1)', // red-600 con opacidad
       fill: true,
@@ -104,8 +133,8 @@ const HistoryPage = ({ onLogout, user }) => {
       pointBackgroundColor: '#dc2626', // red-600
       pointBorderColor: '#ffffff',
       pointBorderWidth: 2,
-      pointRadius: 4,
-      pointHoverRadius: 8,
+      pointRadius: isMobile ? 3 : 4,
+      pointHoverRadius: isMobile ? 6 : 8,
       pointHoverBackgroundColor: '#b91c1c', // red-700
       pointHoverBorderColor: '#ffffff',
       pointHoverBorderWidth: 3
@@ -115,13 +144,17 @@ const HistoryPage = ({ onLogout, user }) => {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     plugins: {
       legend: {
         position: 'bottom',
         labels: {
           color: '#e5e7eb', // gray-200
           font: {
-            size: 14
+            size: isMobile ? 12 : 14
           }
         }
       },
@@ -131,22 +164,29 @@ const HistoryPage = ({ onLogout, user }) => {
         titleColor: '#f9fafb', // gray-50
         bodyColor: '#f9fafb', // gray-50
         borderColor: '#6b7280', // gray-500
-        borderWidth: 1
+        borderWidth: 1,
+        titleFont: {
+          size: isMobile ? 12 : 14
+        },
+        bodyFont: {
+          size: isMobile ? 11 : 13
+        }
       },
       zoom: {
         zoom: {
           wheel: {
-            enabled: true,
+            enabled: !isMobile, // Deshabilitar zoom con rueda en móvil
             speed: 0.1
           },
           pinch: {
-            enabled: true
+            enabled: true // Habilitar pinch zoom en móvil
           },
           mode: 'x'
         },
         pan: {
           enabled: true,
-          mode: 'x'
+          mode: 'x',
+          modifierKey: null // Permitir pan sin tecla modificadora
         },
         limits: {
           x: { min: 'original', max: 'original' }
@@ -156,7 +196,12 @@ const HistoryPage = ({ onLogout, user }) => {
     scales: {
       x: {
         ticks: {
-          color: '#d1d5db' // gray-300
+          color: '#d1d5db', // gray-300
+          maxRotation: isMobile ? 45 : 0,
+          minRotation: isMobile ? 45 : 0,
+          font: {
+            size: isMobile ? 10 : 12
+          }
         },
         grid: {
           color: '#4b5563' // gray-600
@@ -166,7 +211,10 @@ const HistoryPage = ({ onLogout, user }) => {
         min: 600,
         max: 850,
         ticks: {
-          color: '#d1d5db' // gray-300
+          color: '#d1d5db', // gray-300
+          font: {
+            size: isMobile ? 10 : 12
+          }
         },
         grid: {
           color: '#4b5563' // gray-600
@@ -187,7 +235,7 @@ const HistoryPage = ({ onLogout, user }) => {
       <main className='flex-1 overflow-y-auto mt-20 p-4 md:p-6'>
         <div className='bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-2xl'>
           {/* --- Selector de Vista (UI Mejorada) --- */}
-          <div className='flex justify-center mb-6 bg-gray-700 rounded-lg p-1'>
+          <div className='flex justify-center mb-4 bg-gray-700 rounded-lg p-1'>
             <button
               onClick={() => setView('chart')}
               className={`w-full py-2 px-4 font-semibold rounded-md transition-colors ${view === 'chart'
@@ -208,6 +256,52 @@ const HistoryPage = ({ onLogout, user }) => {
             </button>
           </div>
 
+          {/* --- Filtros de Tiempo (solo visible en vista de gráfica) --- */}
+          {view === 'chart' && (
+            <div className='mb-4'>
+              <div className='flex flex-wrap gap-2 items-center justify-between'>
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => setTimeRange(6)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${timeRange === 6
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                  >
+                    6h
+                  </button>
+                  <button
+                    onClick={() => setTimeRange(12)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${timeRange === 12
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                  >
+                    12h
+                  </button>
+                  <button
+                    onClick={() => setTimeRange(24)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${timeRange === 24
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                  >
+                    24h
+                  </button>
+                </div>
+                <button
+                  onClick={handleResetZoom}
+                  className='px-3 py-1.5 text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 rounded-md transition-colors'
+                >
+                  🔄 Reset Zoom
+                </button>
+              </div>
+              <p className='text-xs text-gray-400 mt-2'>
+                {isMobile ? '📱 Usa dos dedos para hacer zoom y arrastra para navegar' : '🖱️ Usa la rueda del ratón para zoom y arrastra para navegar'}
+              </p>
+            </div>
+          )}
+
           {/* --- Contenido Dinámico --- */}
           {loading && <LoadingSpinner />}
           {error && <ErrorMessage message={error} />}
@@ -217,12 +311,9 @@ const HistoryPage = ({ onLogout, user }) => {
               : (
                 view === 'chart'
                   ? (
-                    <div
-                      ref={scrollContainerRef}
-                      className='w-full overflow-x-auto pb-4' // pb-4 para dar espacio al scrollbar
-                    >
-                      <div className='h-96 min-w-[2000px] bg-gray-900 rounded-lg p-4'>
-                        <Line data={chartData} options={chartOptions} />
+                    <div className='w-full'>
+                      <div className='h-96 md:h-[500px] bg-gray-900 rounded-lg p-4'>
+                        <Line ref={chartRef} data={chartData} options={chartOptions} />
                       </div>
                     </div>
                   )
