@@ -20,7 +20,7 @@ def publish_history_loop(client):
         print(f"--- Ciclo de HISTORIAL (cada {settings.HISTORY_INTERVAL_SECONDS}s) ---")
         # --- CAMBIO: Iteramos sobre el mapa de equipos ---
         for equipment_name in settings.EQUIPMENT_MAP.keys():
-            temp = round(random.uniform(700.0, 750.0), 1)
+            temp = round(random.uniform(600.0, 750.0), 1)
             equipo_topic_name = equipment_name.replace(" ", "_")
             topic = settings.TOPIC_HISTORY_BASE.format(equipo=equipo_topic_name)
 
@@ -114,4 +114,3 @@ if __name__ == "__main__":
     realtime_thread.start()
 
     client.loop_forever()
-

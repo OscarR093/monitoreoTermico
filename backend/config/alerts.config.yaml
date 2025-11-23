@@ -1,0 +1,62 @@
+# Configuración de alertas de temperatura
+alerts:
+  # Habilitar/deshabilitar sistema de alertas
+  enabled: true
+  
+  # Configuración de Telegram
+  telegram:
+    # Token del bot (viene de variable de entorno)
+    botToken: ${TELEGRAM_BOT_TOKEN}
+    # ID del canal donde se publicarán las alertas
+    channelId: ${TELEGRAM_CHANNEL_ID}
+  
+  # Configuración de rangos por equipo
+    # IMPORTANTE: Los nombres deben coincidir exactamente con los del gateway
+  equipments:
+    - name: "Torre Fusora"
+      minTemp: 715
+      maxTemp: 790
+      enabled: true
+      description: "Torre Fusora"
+    
+    - name: "Linea 1"
+      minTemp: 705
+      maxTemp: 755
+      enabled: true
+      description: "Línea 1"
+    
+    - name: "Linea 2"
+      minTemp: 705
+      maxTemp: 755
+      enabled: true
+      description: "Línea 2"
+    
+    - name: "Linea 3"
+      minTemp: 705
+      maxTemp: 755
+      enabled: true
+      description: "Línea 3"
+    
+    - name: "Linea 4"
+      minTemp: 705
+      maxTemp: 755
+      enabled: true
+      description: "Línea 4"
+    
+    - name: "Estacion 1"
+      minTemp: 705
+      maxTemp: 755
+      enabled: true
+      description: "Estación de preparado 1"
+    
+    - name: "Estacion 2"
+      minTemp: 705
+      maxTemp: 755
+      enabled: true
+      description: "Estación de preparado 2"
+    
+    - name: "Linea 7"
+      minTemp: 705
+      maxTemp: 755
+      enabled: true
+      description: "Línea 7"

@@ -4,21 +4,29 @@ import { Model, FilterQuery } from 'mongoose';
 import { TemperatureHistory, TemperatureHistoryDocument } from './schemas/temperature-history.schema';
 import { GetTemperatureHistoryDto } from './dto/get-temperature-history.dto';
 import { FilterTemperatureHistoryDto } from './dto/filter-temperature-history.dto';
+import { AlertsService } from '../alerts/alerts.service';
 
 @Injectable()
 export class TemperatureHistoryService {
   constructor(
-    @InjectModel(TemperatureHistory.name) 
+    @InjectModel(TemperatureHistory.name)
     private temperatureHistoryModel: Model<TemperatureHistoryDocument>,
-  ) {}
+    private alertsService: AlertsService,
+  ) { }
 
   // Método para guardar un registro de temperatura (utilizado por el consumidor MQTT)
   async saveTemperatureReading(equipmentName: string, temperature: number, timestamp?: Date): Promise<TemperatureHistoryDocument> {
-    return this.temperatureHistoryModel.create({
+    const saved = await this.temperatureHistoryModel.create({
       timestamp: timestamp || new Date(),
       temperatura: temperature,
       equipo: equipmentName,
     });
+
+    // Verificar alertas (async, no bloqueante)
+    this.alertsService.checkAndNotify(equipmentName, temperature)
+      .catch(err => console.error('[TemperatureHistoryService] Alert check failed:', err));
+
+    return saved;
   }
 
   // Método para encontrar historiales por equipo (filtrado por últimas 24 horas para compatibilidad)
@@ -27,16 +35,16 @@ export class TemperatureHistoryService {
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    const query = { 
+    const query = {
       equipo: equipmentName,
       timestamp: { $gte: twentyFourHoursAgo } // Solo registros de las últimas 24 horas
     };
-    
-    const options: any = { 
+
+    const options: any = {
       sort: { timestamp: -1 }, // Ordena por fecha, los más nuevos primero
       select: 'temperatura timestamp -_id' // Selecciona solo los campos que necesitas para compatibilidad
     };
-    
+
     if (limit) {
       options.limit = limit;
     }
@@ -47,29 +55,29 @@ export class TemperatureHistoryService {
 
   // Método para encontrar historiales por rango de fechas (para el endpoint de compatibilidad)
   async findByDateRange(
-    equipmentName: string, 
-    startDate: Date, 
-    endDate: Date, 
+    equipmentName: string,
+    startDate: Date,
+    endDate: Date,
     options?: { sort?: any; select?: string }
   ): Promise<TemperatureHistoryDocument[]> {
-    const query = { 
+    const query = {
       equipo: equipmentName,
-      timestamp: { 
+      timestamp: {
         $gte: startDate,
         $lte: endDate
-      } 
+      }
     };
-    
+
     let queryBuilder = this.temperatureHistoryModel.find(query);
-    
+
     if (options?.select) {
       queryBuilder = queryBuilder.select(options.select);
     }
-    
+
     if (options?.sort) {
       queryBuilder = queryBuilder.sort(options.sort);
     }
-    
+
     const result = await queryBuilder.exec();
     return result as unknown as TemperatureHistoryDocument[];
   }
@@ -77,13 +85,13 @@ export class TemperatureHistoryService {
   // Método para encontrar historiales con filtros
   async findByFilters(filterDto: FilterTemperatureHistoryDto): Promise<TemperatureHistoryDocument[]> {
     const { equipment, startDate, endDate, minTemperature, maxTemperature, limit } = filterDto;
-    
+
     const query: FilterQuery<TemperatureHistoryDocument> = {};
-    
+
     if (equipment) {
       query.equipo = equipment;
     }
-    
+
     if (startDate || endDate) {
       query.timestamp = {};
       if (startDate) {
@@ -93,11 +101,11 @@ export class TemperatureHistoryService {
         query.timestamp.$lte = new Date(endDate);
       }
     }
-    
+
     if (minTemperature !== undefined) {
       query.temperatura = { ...query.temperatura, $gte: minTemperature };
     }
-    
+
     if (maxTemperature !== undefined) {
       query.temperatura = { ...query.temperatura, $lte: maxTemperature };
     }
@@ -114,10 +122,10 @@ export class TemperatureHistoryService {
   // Método para obtener historial con opciones de paginación y límite
   async getHistory(getHistoryDto: GetTemperatureHistoryDto): Promise<TemperatureHistoryDocument[]> {
     const { equipment, limit = 100, sort = -1 } = getHistoryDto;
-    
+
     const query = equipment ? { equipo: equipment } : {};
-    const options = { 
-      sort: { timestamp: sort }, 
+    const options = {
+      sort: { timestamp: sort },
       limit: Math.min(limit, 1000) // Limitar a 1000 registros como máximo por seguridad
     };
 
@@ -135,11 +143,11 @@ export class TemperatureHistoryService {
   async deleteOldRecords(ageInDays: number): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - ageInDays);
-    
+
     const result = await this.temperatureHistoryModel.deleteMany({
       timestamp: { $lt: cutoffDate }
     });
-    
+
     return result.deletedCount;
   }
 

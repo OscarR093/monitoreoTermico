@@ -3,10 +3,12 @@ import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TemperatureHistoryService } from './temperature-history.service';
 import { TemperatureHistory } from './schemas/temperature-history.schema';
+import { AlertsService } from '../alerts/alerts.service';
 
 describe('TemperatureHistoryService', () => {
   let service: TemperatureHistoryService;
   let model: Model<TemperatureHistory>;
+  let alertsService: AlertsService;
 
   const mockTemperatureHistory = {
     _id: 'someId',
@@ -30,6 +32,10 @@ describe('TemperatureHistoryService', () => {
     deleteMany: jest.fn(),
   };
 
+  const mockAlertsService = {
+    checkAndNotify: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -38,11 +44,16 @@ describe('TemperatureHistoryService', () => {
           provide: getModelToken(TemperatureHistory.name),
           useValue: mockModel,
         },
+        {
+          provide: AlertsService,
+          useValue: mockAlertsService,
+        },
       ],
     }).compile();
 
     service = module.get<TemperatureHistoryService>(TemperatureHistoryService);
     model = module.get<Model<TemperatureHistory>>(getModelToken(TemperatureHistory.name));
+    alertsService = module.get<AlertsService>(AlertsService);
   });
 
   it('should be defined', () => {

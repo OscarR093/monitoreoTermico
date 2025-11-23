@@ -3,20 +3,17 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TemperatureHistory, TemperatureHistorySchema } from './schemas/temperature-history.schema';
 import { TemperatureHistoryService } from './temperature-history.service';
 import { LegacyTemperatureHistoryController } from './legacy-temperature-history.controller';
+import { AlertsModule } from '../alerts/alerts.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      {
-        name: TemperatureHistory.name,
-        schema: TemperatureHistorySchema,
-        // Opcional: especificar nombre de colección predeterminado
-        // collection: 'temperature_history' 
-      }
+      { name: TemperatureHistory.name, schema: TemperatureHistorySchema }
     ]),
+    AlertsModule,
   ],
-  providers: [TemperatureHistoryService],
   controllers: [LegacyTemperatureHistoryController],
-  exports: [TemperatureHistoryService], // Exportar el servicio para que pueda ser usado por otros módulos
+  providers: [TemperatureHistoryService],
+  exports: [TemperatureHistoryService],
 })
 export class TemperatureHistoryModule { }

@@ -3,7 +3,7 @@ services:
   # Traefik (Manejando HTTPS y MQTTS)
   # ----------------------------------------------------
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.6
     container_name: mi-traefik-proxy
     restart: unless-stopped
     command:
@@ -31,9 +31,12 @@ services:
   # Aplicación Node.js (NestJS Backend + React Frontend)
   # ----------------------------------------------------
   node-app:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    # Usar imagen pre-construida de Docker Hub
+    image: oscarr093/monitoreotermico:latest
+    # Para build local, comenta la línea anterior y descomenta las siguientes:
+    # build:
+    #   context: .
+    #   dockerfile: backend/Dockerfile
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     depends_on:
@@ -51,6 +54,8 @@ services:
       - PORT=3000
       - SUPER_USER_USERNAME=${SUPER_USER_USERNAME}
       - SUPER_USER_PASSWORD=${SUPER_USER_PASSWORD}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID}
     networks:
       - mi-red
     labels:

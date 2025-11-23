@@ -108,6 +108,8 @@ cp .env.example .env
 - `BCRYPT_SALT_ROUNDS`: Número de rondas para encriptación bcrypt (por defecto: 10)
 - `NODE_ENV`: Entorno de ejecución (production, development, test)
 - `PORT`: Puerto de la aplicación (por defecto: 3000)
+- `TELEGRAM_BOT_TOKEN`: Token del bot de Telegram para alertas (opcional)
+- `TELEGRAM_CHANNEL_ID`: ID del canal de Telegram donde se enviarán las alertas (opcional)
 
 ## Iniciar la aplicación
 
@@ -173,6 +175,57 @@ npm run start:prod
 - `GET /thermocouple-history/:equipmentName`
 - **Seguridad**: Requiere estar autenticado.
 - Retorna: Array de registros históricos para el equipo solicitado.
+
+## Sistema de Alertas por Telegram
+
+El sistema incluye alertas automáticas por Telegram que se envían cuando las temperaturas de los equipos salen de los rangos configurados.
+
+### Configuración de Alertas
+
+Las alertas se configuran en el archivo `config/alerts.config.yaml`:
+
+```yaml
+alerts:
+  enabled: true
+  telegram:
+    botToken: ${TELEGRAM_BOT_TOKEN}
+    channelId: ${TELEGRAM_CHANNEL_ID}
+  
+  equipments:
+    - name: "Horno 1"
+      minTemp: 150
+      maxTemp: 250
+      enabled: true
+      description: "Horno principal"
+```
+
+### Configurar Bot de Telegram
+
+1. **Crear bot**: Habla con [@BotFather](https://t.me/botfather) en Telegram
+   - Envía `/newbot`
+   - Sigue las instrucciones
+   - Guarda el token que te proporciona
+
+2. **Crear canal**: Crea un canal público o privado en Telegram
+   - Añade el bot como administrador del canal
+   - Obtén el ID del canal (ej: `@mi_canal_alertas` o `-1001234567890`)
+
+3. **Configurar variables de entorno**:
+   ```bash
+   TELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
+   TELEGRAM_CHANNEL_ID=@mi_canal_alertas
+   ```
+
+4. **Editar rangos**: Modifica `config/alerts.config.yaml` según tus equipos
+
+5. **Reiniciar backend**: Las alertas se activarán automáticamente
+
+### Funcionamiento
+
+- Las alertas se verifican cada vez que se guarda un dato de temperatura (~5 minutos)
+- Si la temperatura está fuera del rango configurado, se envía una alerta al canal
+- El cooldown es automático (intervalo de guardado)
+- Las alertas son efímeras (no se guardan en base de datos)
 
 ## WebSocket y comunicación en tiempo real
 

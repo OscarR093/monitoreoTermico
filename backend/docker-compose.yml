@@ -1,3 +1,11 @@
+# IMPORTANTE: Este docker-compose.yml usa variables del archivo .env de la RAÍZ
+# Para ejecutar correctamente:
+#   cd backend
+#   docker-compose --env-file ../.env up -d
+#
+# O desde la raíz:
+#   docker-compose -f backend/docker-compose.yml up -d
+
 services:
   # ----------------------------------------------------
   # Backend NestJS API

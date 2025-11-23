@@ -96,6 +96,28 @@ cp .env.example .env
 - `JWT_SECRET`: Secreto para tokens JWT (cadena segura)
 - `EMQX_NODE_COOKIE`: Clave para comunicación entre nodos EMQX
 - `SUPER_USER_USERNAME` / `SUPER_USER_PASSWORD`: Credenciales de super usuario
+- `TELEGRAM_BOT_TOKEN`: Token del bot de Telegram para alertas (opcional)
+- `TELEGRAM_CHANNEL_ID`: ID del canal de Telegram (opcional)
+
+### Estructura de Archivos .env
+
+El proyecto utiliza **un único archivo `.env` en la raíz** para toda la configuración:
+
+```
+monitoreoTermico/
+├── .env                    ← Archivo principal (backend + docker-compose)
+├── .env.example           ← Plantilla con todas las variables
+├── backend/
+│   └── (NO .env aquí)     ← El backend usa el .env de la raíz
+└── gateway/
+    └── .env               ← Configuración específica del gateway (separada)
+```
+
+**Importante:**
+- El backend **NO** debe tener su propio `.env`
+- En desarrollo, el backend lee el `.env` de la raíz
+- En producción, Docker Compose pasa las variables desde el `.env` de la raíz
+- El gateway sí tiene su propio `.env` porque se ejecuta en un entorno diferente
 
 ### Preparación del Despliegue
 
