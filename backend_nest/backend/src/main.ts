@@ -8,11 +8,16 @@ import { UnhandledRejectionHandler } from './exceptions/unhandled-rejection.filt
 import { WsAdapter } from '@nestjs/platform-ws';
 import { join } from 'path';
 
+import { NestExpressApplication } from '@nestjs/platform-express';
+
 async function bootstrap() {
   // Iniciar el manejador de rechazos no manejados
   new UnhandledRejectionHandler();
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Servir archivos estáticos del frontend
+  app.useStaticAssets(join(process.cwd(), 'frontend_dist'));
 
   // Configurar adaptador WebSocket nativo (compatible con el frontend)
   app.useWebSocketAdapter(new WsAdapter(app));
@@ -23,12 +28,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Configurar prefijo global /api para todas las rutas excepto las del frontend
-  app.setGlobalPrefix('api', {
-    exclude: [
-      { path: 'login', method: RequestMethod.GET }, // Ruta del frontend
-    ],
-  });
+  // Configurar prefijo global eliminado para manejo explícito de rutas
+  // app.setGlobalPrefix('api');
 
   // Middleware para manejar cookies
   app.use(cookieParser());

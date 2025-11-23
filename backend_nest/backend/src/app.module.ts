@@ -1,7 +1,6 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -11,7 +10,7 @@ import { MqttModule } from './mqtt/mqtt.module';
 import { WebSocketModule } from './websocket/websocket.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
-import { FrontendController } from './frontend.controller';
+import { FrontendModule } from './frontend/frontend.module';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
 
 import { EnvController } from './config/env.controller';
@@ -19,17 +18,6 @@ import { EnvController } from './config/env.controller';
 @Module({
   imports: [
     ConfigAppModule,
-    ServeStaticModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => [
-        {
-          rootPath: join(process.cwd(), 'frontend_dist'),
-          serveRoot: '/',
-          exclude: ['/api*'],
-        },
-      ],
-    }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -42,8 +30,9 @@ import { EnvController } from './config/env.controller';
     TemperatureHistoryModule,
     MqttModule,
     WebSocketModule,
+    FrontendModule, // IMPORTANTE: Debe ser el último para que el catch-all funcione
   ],
-  controllers: [EnvController, AppController, FrontendController],
+  controllers: [EnvController, AppController],
   providers: [
     AppService,
   ],

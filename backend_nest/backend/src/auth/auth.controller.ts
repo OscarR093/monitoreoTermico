@@ -10,7 +10,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import type { Response } from 'express';
 
 @ApiTags('Authentication')
-@Controller('auth')
+@Controller('api/auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
@@ -170,7 +170,7 @@ export class AuthController {
 }
 
 // CONTROLADOR DE RUTAS LEGACY ALIAS - para compatibilidad con frontend
-@Controller()
+@Controller('api')
 export class LegacyAuthController {
   constructor(
     private authService: AuthService,

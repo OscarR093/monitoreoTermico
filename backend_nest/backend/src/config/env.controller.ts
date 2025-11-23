@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('config')
-@Controller('env')
+@Controller('api/env')
 export class EnvController {
     constructor(private configService: ConfigService) { }
 

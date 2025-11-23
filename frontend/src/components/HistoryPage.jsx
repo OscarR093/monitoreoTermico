@@ -13,7 +13,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler // Importar para el relleno del área
+  Filler, // Importar para el relleno del área
+  Zoom // Importar para zoom interactivo
 } from 'chart.js'
 
 ChartJS.register(
@@ -24,7 +25,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  Zoom
 )
 
 // --- Componentes de UI para estados ---
@@ -130,6 +132,25 @@ const HistoryPage = ({ onLogout, user }) => {
         bodyColor: '#f9fafb', // gray-50
         borderColor: '#6b7280', // gray-500
         borderWidth: 1
+      },
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: true,
+            speed: 0.1
+          },
+          pinch: {
+            enabled: true
+          },
+          mode: 'x'
+        },
+        pan: {
+          enabled: true,
+          mode: 'x'
+        },
+        limits: {
+          x: { min: 'original', max: 'original' }
+        }
       }
     },
     scales: {
@@ -170,8 +191,8 @@ const HistoryPage = ({ onLogout, user }) => {
             <button
               onClick={() => setView('chart')}
               className={`w-full py-2 px-4 font-semibold rounded-md transition-colors ${view === 'chart'
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
-                  : 'text-gray-300 hover:bg-gray-600 hover:text-gray-100'
+                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
+                : 'text-gray-300 hover:bg-gray-600 hover:text-gray-100'
                 }`}
             >
               Gráfica
@@ -179,8 +200,8 @@ const HistoryPage = ({ onLogout, user }) => {
             <button
               onClick={() => setView('table')}
               className={`w-full py-2 px-4 font-semibold rounded-md transition-colors ${view === 'table'
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
-                  : 'text-gray-300 hover:bg-gray-600 hover:text-gray-100'
+                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
+                : 'text-gray-300 hover:bg-gray-600 hover:text-gray-100'
                 }`}
             >
               Tabla
@@ -200,7 +221,7 @@ const HistoryPage = ({ onLogout, user }) => {
                       ref={scrollContainerRef}
                       className='w-full overflow-x-auto pb-4' // pb-4 para dar espacio al scrollbar
                     >
-                      <div className='h-96 min-w-[1000px] bg-gray-900 rounded-lg p-4'>
+                      <div className='h-96 min-w-[2000px] bg-gray-900 rounded-lg p-4'>
                         <Line data={chartData} options={chartOptions} />
                       </div>
                     </div>

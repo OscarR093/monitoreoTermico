@@ -21,7 +21,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 
 @ApiTags('users') // Etiqueta para agrupar en Swagger
 @ApiBearerAuth()
-@Controller('users')
+@Controller('api/users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }

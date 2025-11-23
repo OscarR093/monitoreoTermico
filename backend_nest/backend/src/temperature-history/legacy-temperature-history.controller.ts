@@ -4,7 +4,7 @@ import { TemperatureHistoryService } from './temperature-history.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('temperature-history-legacy')
-@Controller('thermocouple-history')
+@Controller('api/thermocouple-history')
 @UseGuards(JwtAuthGuard)
 export class LegacyTemperatureHistoryController {
     constructor(private readonly temperatureHistoryService: TemperatureHistoryService) { }
