@@ -1,5 +1,5 @@
 // src/components/HistoryPage.jsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { Line } from 'react-chartjs-2'
@@ -58,6 +58,14 @@ const HistoryPage = ({ onLogout, user }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [view, setView] = useState('chart') // Estado para controlar la vista: 'chart' o 'table'
+  const scrollContainerRef = useRef(null)
+
+  // Efecto para hacer scroll al final (derecha) cuando se carga la gráfica
+  useEffect(() => {
+    if (view === 'chart' && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth
+    }
+  }, [historyData, view])
 
   useEffect(() => {
     const fetchHistoryData = async () => {
@@ -106,7 +114,7 @@ const HistoryPage = ({ onLogout, user }) => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { 
+      legend: {
         position: 'bottom',
         labels: {
           color: '#e5e7eb', // gray-200
@@ -133,8 +141,8 @@ const HistoryPage = ({ onLogout, user }) => {
           color: '#4b5563' // gray-600
         }
       },
-      y: { 
-        min: 600, 
+      y: {
+        min: 600,
         max: 850,
         ticks: {
           color: '#d1d5db' // gray-300
@@ -148,7 +156,7 @@ const HistoryPage = ({ onLogout, user }) => {
 
   return (
     <div className='min-h-screen font-sans bg-gray-900 text-gray-100'>
-      <Header 
+      <Header
         title={`Historial: ${nombreEquipo}`}
         user={user}
         onLogout={onLogout}
@@ -159,23 +167,21 @@ const HistoryPage = ({ onLogout, user }) => {
         <div className='bg-gray-800 border border-gray-700 p-6 rounded-xl shadow-2xl'>
           {/* --- Selector de Vista (UI Mejorada) --- */}
           <div className='flex justify-center mb-6 bg-gray-700 rounded-lg p-1'>
-            <button 
-              onClick={() => setView('chart')} 
-              className={`w-full py-2 px-4 font-semibold rounded-md transition-colors ${
-                view === 'chart' 
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg' 
+            <button
+              onClick={() => setView('chart')}
+              className={`w-full py-2 px-4 font-semibold rounded-md transition-colors ${view === 'chart'
+                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
                   : 'text-gray-300 hover:bg-gray-600 hover:text-gray-100'
-              }`}
+                }`}
             >
               Gráfica
             </button>
-            <button 
-              onClick={() => setView('table')} 
-              className={`w-full py-2 px-4 font-semibold rounded-md transition-colors ${
-                view === 'table' 
-                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg' 
+            <button
+              onClick={() => setView('table')}
+              className={`w-full py-2 px-4 font-semibold rounded-md transition-colors ${view === 'table'
+                  ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
                   : 'text-gray-300 hover:bg-gray-600 hover:text-gray-100'
-              }`}
+                }`}
             >
               Tabla
             </button>
@@ -188,37 +194,42 @@ const HistoryPage = ({ onLogout, user }) => {
             historyData.length === 0
               ? <EmptyState />
               : (
-                  view === 'chart'
-                    ? (
-                      <div className='h-96 w-full bg-gray-900 rounded-lg p-4'>
+                view === 'chart'
+                  ? (
+                    <div
+                      ref={scrollContainerRef}
+                      className='w-full overflow-x-auto pb-4' // pb-4 para dar espacio al scrollbar
+                    >
+                      <div className='h-96 min-w-[1000px] bg-gray-900 rounded-lg p-4'>
                         <Line data={chartData} options={chartOptions} />
                       </div>
-                      )
-                    : (
-                      <div className='overflow-auto rounded-lg shadow-inner h-96 bg-gray-900 border border-gray-700'>
-                        <table className='min-w-full divide-y divide-gray-700'>
-                          <thead className='bg-gray-800 sticky top-0'>
-                            <tr>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-gray-200 uppercase tracking-wider'>Fecha y Hora</th>
-                                <th className='px-6 py-3 text-left text-xs font-semibold text-gray-200 uppercase tracking-wider'>Temperatura (°C)</th>
-                              </tr>
-                          </thead>
-                          <tbody className='bg-gray-900 divide-y divide-gray-700'>
-                            {historyData.map((data, index) => (
-                                <tr key={index} className='hover:bg-gray-800 transition-colors'>
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200'>
-                                      {new Date(data.timestamp).toLocaleString('es-ES')}
-                                    </td>
-                                    <td className='px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-400'>
-                                      {data.temperatura}°C
-                                    </td>
-                                  </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      )
-                )
+                    </div>
+                  )
+                  : (
+                    <div className='overflow-auto rounded-lg shadow-inner h-96 bg-gray-900 border border-gray-700'>
+                      <table className='min-w-full divide-y divide-gray-700'>
+                        <thead className='bg-gray-800 sticky top-0'>
+                          <tr>
+                            <th className='px-6 py-3 text-left text-xs font-semibold text-gray-200 uppercase tracking-wider'>Fecha y Hora</th>
+                            <th className='px-6 py-3 text-left text-xs font-semibold text-gray-200 uppercase tracking-wider'>Temperatura (°C)</th>
+                          </tr>
+                        </thead>
+                        <tbody className='bg-gray-900 divide-y divide-gray-700'>
+                          {historyData.map((data, index) => (
+                            <tr key={index} className='hover:bg-gray-800 transition-colors'>
+                              <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-200'>
+                                {new Date(data.timestamp).toLocaleString('es-ES')}
+                              </td>
+                              <td className='px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-400'>
+                                {data.temperatura}°C
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
+              )
           )}
         </div>
       </main>
