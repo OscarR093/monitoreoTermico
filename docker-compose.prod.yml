@@ -28,10 +28,12 @@ services:
       - mi-red
 
   # ----------------------------------------------------
-  # Aplicación Node.js (sin cambios)
+  # Aplicación Node.js (NestJS Backend + React Frontend)
   # ----------------------------------------------------
   node-app:
-    image: oscarr093/monitoreotermico:2.5
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     depends_on:
@@ -43,8 +45,10 @@ services:
       - MQTT_USER=${MOSQUITTO_USER}
       - MQTT_PASS=${MOSQUITTO_PASS}
       - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=1h
       - DOMAIN_URL=${DOMAIN_URL}
       - NODE_ENV=production
+      - PORT=3000
       - SUPER_USER_USERNAME=${SUPER_USER_USERNAME}
       - SUPER_USER_PASSWORD=${SUPER_USER_PASSWORD}
     networks:

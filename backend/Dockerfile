@@ -1,10 +1,9 @@
 # --- Etapa 1: "Frontend Builder" ---
 FROM node:24-slim AS frontend-builder
 WORKDIR /usr/src/app
-# Corregido: Especificamos la ruta al package.json del frontend
+# Copiamos el frontend para construirlo
 COPY frontend/package*.json ./
 RUN npm install --legacy-peer-deps
-# Corregido: Especificamos la ruta al código fuente del frontend
 COPY frontend/ ./
 RUN npm run build
 
@@ -18,24 +17,32 @@ RUN apt-get update && apt-get install -y \
     make \
     g++ \
     && rm -rf /var/lib/apt/lists/*
-# Corregido: Especificamos la ruta al package.json del backend
+
+# Copiamos el package.json del nuevo backend NestJS
 COPY backend/package*.json ./
 RUN npm install
-# Corregido: Especificamos la ruta al código fuente del backend
+
+# Copiamos el código fuente del backend NestJS
 COPY backend/ ./
+
+# Compilamos el backend NestJS
+RUN npm run build
 
 
 # --- Etapa 3: "Production" ---
 FROM node:24-slim
 WORKDIR /usr/src/app
 
-# Copiamos las dependencias del backend
+# Copiamos las dependencias del backend NestJS
 COPY --from=backend-builder /usr/src/app/node_modules ./node_modules
-# Copiamos el código del backend
-COPY --from=backend-builder /usr/src/app .
+# Copiamos el código compilado del backend NestJS
+COPY --from=backend-builder /usr/src/app/dist ./dist
+COPY --from=backend-builder /usr/src/app/package*.json ./
+COPY --from=backend-builder /usr/src/app/nest-cli.json ./
+COPY --from=backend-builder /usr/src/app/tsconfig*.json ./
 
 # Copiamos la carpeta 'dist' construida del frontend
-COPY --from=frontend-builder /usr/src/app/dist ./dist
+COPY --from=frontend-builder /usr/src/app/dist ./frontend_dist
 
 EXPOSE 3000
-CMD [ "node", "index.js" ]
+CMD [ "node", "dist/main.js" ]

@@ -1,0 +1,32 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "server for thermic monitor ",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "fix": "npx standard --fix",
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "author": "oscarR093",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "5.1.1",
+    "cookie-parser": "1.4.7",
+    "db-local": "3.1.0",
+    "express": "4.21.2",
+    "jsonwebtoken": "9.0.2",
+    "mongoose": "8.12.1",
+    "mqtt": "5.14.0",
+    "ws": "8.18.1"
+  },
+  "devDependencies": {
+    "nodemon": "3.1.9",
+    "standard": "17.1.2"
+  },
+  "eslintConfig": {
+    "extends": "standard"
+  }
+}
