@@ -32,7 +32,7 @@ services:
   # ----------------------------------------------------
   node-app:
     # Usar imagen pre-construida de Docker Hub
-    image: oscarr093/monitoreotermico:latest
+    image: oscarr093/monitoreotermico:3.0
     # Para build local, comenta la línea anterior y descomenta las siguientes:
     # build:
     #   context: .
