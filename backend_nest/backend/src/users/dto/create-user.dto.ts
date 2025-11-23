@@ -35,7 +35,7 @@ export class CreateUserDto {
   @IsString()
   fullName?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Cell phone number of the user',
     required: false,
     example: '+1234567890'
@@ -43,5 +43,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   cellPhone?: string;
+
+  @ApiProperty({
+    description: 'Whether the user has admin privileges',
+    example: false,
+    required: false
+  })
+  @IsOptional()
+  @IsBoolean()
+  admin?: boolean;
 }
 

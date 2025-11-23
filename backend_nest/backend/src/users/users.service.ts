@@ -22,7 +22,7 @@ export class UsersService {
    * @throws ConflictException if username or email already exists
    */
   async create(
-    dto: CreateUserDto, 
+    dto: CreateUserDto,
     roleOverrides?: { admin?: boolean; isSuperAdmin?: boolean }
   ): Promise<HydratedDocument<User>> {
     // Validar que los campos obligatorios estén presentes
@@ -32,10 +32,10 @@ export class UsersService {
 
     // Construir la condición de búsqueda para evitar duplicados
     const queryConditions: Array<Record<string, any>> = [];
-    
+
     // Siempre verificar el username
     queryConditions.push({ username: dto.username });
-    
+
     // Solo verificar el email si está definido y no es null/undefined
     if (dto.email && dto.email.trim() !== '') {
       queryConditions.push({ email: dto.email });
@@ -57,7 +57,7 @@ export class UsersService {
       ...dto,
       password: hash,
       // Asegurar valores por defecto para campos relacionados con roles
-      admin: roleOverrides?.admin ?? false, // Valor por defecto o sobrescrito
+      admin: roleOverrides?.admin ?? dto.admin ?? false, // Prioridad: override > dto > default false
       isSuperAdmin: roleOverrides?.isSuperAdmin ?? false, // Valor por defecto o sobrescrito
       mustChangePassword: true, // Siempre verdadero por defecto para nuevos usuarios
     };
@@ -104,7 +104,7 @@ export class UsersService {
       }
       return null;
     }
-    
+
     const user = await this.userModel.findById(id).exec();
     if (user) {
       const userObject = user.toObject ? user.toObject() : user;
@@ -146,11 +146,11 @@ export class UsersService {
 
     // Verificar si el nuevo username ya existe (excluyendo al usuario actual)
     if (dto.username && dto.username !== existingUser.username) {
-      const usernameExists = await this.userModel.findOne({ 
-        username: dto.username, 
+      const usernameExists = await this.userModel.findOne({
+        username: dto.username,
         _id: { $ne: id } // Excluir al usuario actual de la búsqueda
       }).exec();
-      
+
       if (usernameExists) {
         throw new ConflictException('El nombre de usuario ya está en uso');
       }
@@ -158,11 +158,11 @@ export class UsersService {
 
     // Verificar si el nuevo email ya existe (excluyendo al usuario actual)
     if (dto.email && dto.email !== existingUser.email) {
-      const emailExists = await this.userModel.findOne({ 
-        email: dto.email, 
+      const emailExists = await this.userModel.findOne({
+        email: dto.email,
         _id: { $ne: id } // Excluir al usuario actual de la búsqueda
       }).exec();
-      
+
       if (emailExists) {
         throw new ConflictException('El email ya está en uso');
       }
