@@ -88,7 +88,9 @@ const ForceUpdateProfile = ({ user }) => {
       // Enviar solo los datos necesarios, excluyendo confirmPassword
       // y preservando el campo admin del usuario actual
       const { confirmPassword, ...dataToSend } = form
-      await api.put(`/users/${user.id}`, {
+      const userId = user.id || user._id
+      console.log('Updating user:', userId, user)
+      await api.put(`/users/${userId}`, {
         ...dataToSend,
         admin: user.admin, // Preservar permisos de administrador
         mustChangePassword: false

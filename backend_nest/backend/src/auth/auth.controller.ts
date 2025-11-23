@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UnauthorizedException, HttpCode, Get, UseGuards, Request, Res } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, HttpCode, Get, UseGuards, Request, Res, ForbiddenException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
@@ -48,7 +48,18 @@ export class AuthController {
     status: 409,
     description: 'Conflict - User already exists'
   })
-  async register(@Body() dto: CreateUserDto) {
+  @UseGuards(JwtAuthGuard)
+  async register(@Body() dto: CreateUserDto, @Request() req) {
+    // Verificar que el usuario sea administrador
+    if (!req.user || !req.user.admin) {
+      throw new ForbiddenException('Acceso denegado. Se requiere rol de administrador.');
+    }
+
+    // Si se intenta crear un admin, verificar que el solicitante sea SuperAdmin
+    if (dto.admin && !req.user.isSuperAdmin) {
+      throw new ForbiddenException('Acceso denegado. Solo un superusuario puede crear administradores.');
+    }
+
     const user: HydratedDocument<User> = await this.usersService.create(dto);
     const { password, ...rest } = user.toObject();
     return rest;
@@ -121,6 +132,7 @@ export class AuthController {
     description: 'Session is invalid or expired'
   })
   checkSession(@Request() req) {
+    console.log('Check Session User:', req.user);
     return {
       valid: true,
       user: req.user
@@ -139,6 +151,7 @@ export class AuthController {
       }
     }
   })
+  @UseGuards(JwtAuthGuard)
   logout(@Res() res: Response) {
     res.clearCookie('access_token', {
       httpOnly: true,
@@ -187,7 +200,18 @@ export class LegacyAuthController {
 
   // Alias para register
   @Post('register')
-  async registerAlias(@Body() dto: CreateUserDto) {
+  @UseGuards(JwtAuthGuard)
+  async registerAlias(@Body() dto: CreateUserDto, @Request() req) {
+    // Verificar que el usuario sea administrador
+    if (!req.user || !req.user.admin) {
+      throw new ForbiddenException('Acceso denegado. Se requiere rol de administrador.');
+    }
+
+    // Si se intenta crear un admin, verificar que el solicitante sea SuperAdmin
+    if (dto.admin && !req.user.isSuperAdmin) {
+      throw new ForbiddenException('Acceso denegado. Solo un superusuario puede crear administradores.');
+    }
+
     const user: HydratedDocument<User> = await this.usersService.create(dto);
     const { password, ...rest } = user.toObject();
     return rest;
@@ -195,6 +219,7 @@ export class LegacyAuthController {
 
   // Alias para logout
   @Post('logout')
+  @UseGuards(JwtAuthGuard)
   async logoutAlias(@Res() res: Response) {
     res.clearCookie('access_token', {
       httpOnly: true,
