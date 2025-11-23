@@ -22,7 +22,9 @@ import { EnvController } from './config/env.controller';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: `mongodb://${configService.get('mongo.user')}:${configService.get('mongo.password')}@localhost:${configService.get('mongo.port')}/monitoreoTermico?authSource=admin`,
+        // Usar MONGODB_URI de variable de entorno (producción) o construir URI (desarrollo)
+        uri: process.env.MONGODB_URI ||
+          `mongodb://${configService.get('mongo.user')}:${configService.get('mongo.password')}@localhost:${configService.get('mongo.port')}/monitoreoTermico?authSource=admin`,
       }),
     }),
     UsersModule,
