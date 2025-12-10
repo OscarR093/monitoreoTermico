@@ -16,7 +16,7 @@ alerts:
     - name: "Torre Fusora"
       minTemp: 720
       maxTemp: 790
-      enabled: true
+      enabled: false
       description: "Torre Fusora"
     
     - name: "Linea 1"
