@@ -73,6 +73,9 @@ services:
     container_name: mi-database-mongo
     restart: unless-stopped
     privileged: true
+    security_opt:
+      - apparmor:unconfined
+      - seccomp:unconfined
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
