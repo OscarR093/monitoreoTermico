@@ -72,6 +72,7 @@ services:
     image: mongodb/mongodb-community-server:7.0-ubi8
     container_name: mi-database-mongo
     restart: unless-stopped
+    privileged: true
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
