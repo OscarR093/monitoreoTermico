@@ -345,7 +345,7 @@ app.get('/api/env', (req, res) => {
     // Si NODE_ENV no está definida, asumimos 'development'
     APP_ENV: process.env.NODE_ENV || 'development',
     // Si DOMAIN_URL no está definida, usamos 'localhost:3000'
-    WS_HOST: process.env.DOMAIN_URL || 'localhost:3000'
+    WS_HOST: process.env.DOMAIN_URL || 'localhost:8420'
   })
 })
 

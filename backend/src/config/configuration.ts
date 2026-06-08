@@ -70,5 +70,5 @@ export default (): EnvironmentConfig => ({
     fullName: process.env.SUPER_USER_FULLNAME || 'Administrador del Sistema',
     phone: process.env.SUPER_USER_PHONE || '0000000000',
   },
-  port: parseInt(process.env.PORT || '3000', 10),
+  port: parseInt(process.env.PORT || '8420', 10),
 });

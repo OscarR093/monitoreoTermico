@@ -26,8 +26,6 @@ MQTT_BROKER_HOST = os.environ.get('MQTT_BROKER_HOST', 'localhost')
 MQTT_BROKER_PORT = int(os.environ.get('MQTT_BROKER_PORT', 1883))
 MQTT_USER = os.environ.get('MQTT_USER', '')
 MQTT_PASSWORD = os.environ.get('MQTT_PASSWORD', '')
-MQTT_CA_CERTS = os.environ.get('MQTT_CA_CERTS', '')
-
 # --- 3. Configuración de Tópicos MQTT ---
 TOPIC_HISTORY_BASE = os.environ.get('TOPIC_HISTORY_BASE', 'plcTemperaturas/historial/{equipo}')
 TOPIC_REALTIME_BASE = os.environ.get('TOPIC_REALTIME_BASE', 'plcTemperaturas/tiemporeal/{equipo}')

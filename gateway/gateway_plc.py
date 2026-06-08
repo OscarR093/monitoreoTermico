@@ -1,8 +1,6 @@
 # gateway_plc.py
 
 import paho.mqtt.client as mqtt
-import ssl
-import certifi
 import time
 import threading
 import json
@@ -118,8 +116,6 @@ if __name__ == "__main__":
     client.on_disconnect = on_disconnect
     client.on_publish = on_publish
     client.on_message = on_message
-    #client.tls_set(ca_certs=certifi.where(), tls_version=ssl.PROTOCOL_TLS)
-    
     # Configurar reconexión automática
     client.reconnect_delay_set(
         min_delay=settings.MQTT_RECONNECT_MIN_DELAY, 

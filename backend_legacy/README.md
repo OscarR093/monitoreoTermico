@@ -67,7 +67,7 @@ El backend se configura principalmente a través de variables de entorno definid
 - `MQTT_BROKER_URL`: URL del broker MQTT
 - `MQTT_USER`: Usuario para autenticación MQTT
 - `MQTT_PASS`: Contraseña para autenticación MQTT
-- `PORT`: Puerto en el que escucha el servidor (por defecto 3000)
+- `PORT`: Puerto en el que escucha el servidor (por defecto 8420)
 - `DOMAIN_URL`: Dominio del sistema (para WebSocket)
 - `NODE_ENV`: Entorno (production/development)
 - `SUPER_USER_USERNAME`: Nombre de usuario para el super admin
@@ -187,7 +187,7 @@ Modelo dinámico que crea colecciones para cada equipo:
 | `MQTT_BROKER_URL` | URL del broker MQTT | mqtt://localhost:1883 |
 | `MQTT_USER` | Usuario MQTT | '' |
 | `MQTT_PASS` | Contraseña MQTT | '' |
-| `PORT` | Puerto del servidor | 3000 |
+| `PORT` | Puerto del servidor | 8420 |
 | `NODE_ENV` | Entorno | development |
 | `SALT_ROUNDS` | Rounds bcrypt | 10 |
 

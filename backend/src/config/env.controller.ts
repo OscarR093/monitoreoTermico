@@ -16,14 +16,14 @@ export class EnvController {
             type: 'object',
             properties: {
                 APP_ENV: { type: 'string', example: 'development' },
-                WS_HOST: { type: 'string', example: 'localhost:3000' }
+                WS_HOST: { type: 'string', example: 'localhost:8420' }
             }
         }
     })
     getEnv() {
         return {
             APP_ENV: this.configService.get<string>('NODE_ENV') || 'development',
-            WS_HOST: this.configService.get<string>('DOMAIN_URL') || 'localhost:3000',
+            WS_HOST: this.configService.get<string>('DOMAIN_URL') || 'localhost:8420',
         };
     }
 }

@@ -1,0 +1,7 @@
+mongo-data/
+node_modules/
+.git/
+backend_legacy/
+development-reports/
+*.md
+diagrams/

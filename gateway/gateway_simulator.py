@@ -1,8 +1,6 @@
 # gateway_simulator.py (Versión Mejorada)
 
 import paho.mqtt.client as mqtt
-import ssl
-import certifi
 import time
 import threading
 import random
@@ -95,8 +93,6 @@ if __name__ == "__main__":
     client.username_pw_set(settings.MQTT_USER, settings.MQTT_PASSWORD)
     client.on_connect = on_connect
     client.on_message = on_message
-    #    client.tls_set(ca_certs=certifi.where(), tls_version=ssl.PROTOCOL_TLS)
-
     try:
         client.connect(settings.MQTT_BROKER_HOST, settings.MQTT_BROKER_PORT, 60)
     except Exception as e:

@@ -255,7 +255,7 @@ services:
       - "traefik.http.routers.node-app.rule=Host(`${DOMAIN_URL}`)"
       - "traefik.http.routers.node-app.entrypoints=websecure"
       - "traefik.http.routers.node-app.tls.certresolver=letsencrypt"
-      - "traefik.http.services.node-app.loadbalancer.server.port=3000"
+      - "traefik.http.services.node-app.loadbalancer.server.port=8420"
 
   # ----------------------------------------------------
   # Base de Datos MongoDB (sin cambios)

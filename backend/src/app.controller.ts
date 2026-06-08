@@ -13,14 +13,14 @@ export class AppController {
       type: 'object',
       example: {
         APP_ENV: 'development',
-        WS_HOST: 'localhost:3000'
+        WS_HOST: 'localhost:8420'
       }
     }
   })
   getEnv() {
     return {
       APP_ENV: process.env.NODE_ENV || 'development',
-      WS_HOST: process.env.DOMAIN_URL || 'localhost:3000'
+      WS_HOST: process.env.DOMAIN_URL || 'localhost:8420'
     };
   }
 }

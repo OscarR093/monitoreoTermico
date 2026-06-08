@@ -51,8 +51,8 @@ async function bootstrap() {
   const doc = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, doc);
 
-  await app.listen(process.env.PORT || 3000);
-  Logger.log(`Application is running on: http://localhost:${process.env.PORT || 3000}`);
+  await app.listen(process.env.PORT || 8420);
+  Logger.log(`Application running on: http://localhost:${process.env.PORT || 8420}`);
 
   // DEBUG: Imprimir rutas registradas
   const server = app.getHttpAdapter().getInstance();

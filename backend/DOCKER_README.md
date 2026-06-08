@@ -66,7 +66,7 @@ La imagen Docker incluye:
 
 ## 📡 Comunicación
 
-- Puerto 3000: API REST y WebSocket
+- Puerto 8420: API REST y WebSocket
 - Puerto 1883: MQTT (EMQX)
 - Puerto 18083: Dashboard EMQX
 - Puerto 27017: MongoDB

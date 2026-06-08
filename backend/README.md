@@ -107,7 +107,7 @@ cp .env.example .env
 - `JWT_EXPIRES_IN`: Tiempo de expiración de JWT (por defecto: 3600s)
 - `BCRYPT_SALT_ROUNDS`: Número de rondas para encriptación bcrypt (por defecto: 10)
 - `NODE_ENV`: Entorno de ejecución (production, development, test)
-- `PORT`: Puerto de la aplicación (por defecto: 3000)
+- `PORT`: Puerto de la aplicación (por defecto: 8420)
 - `TELEGRAM_BOT_TOKEN`: Token del bot de Telegram para alertas (opcional)
 - `TELEGRAM_CHANNEL_ID`: ID del canal de Telegram donde se enviarán las alertas (opcional)
 

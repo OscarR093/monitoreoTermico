@@ -1,8 +1,6 @@
 # remote_control.py
 
 import paho.mqtt.client as mqtt
-import ssl
-import certifi
 import settings
 
 # --- SCRIPT PARA ENVIAR COMANDOS START/STOP ---
@@ -12,7 +10,6 @@ def send_command(command):
     
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.username_pw_set(settings.MQTT_USER, settings.MQTT_PASSWORD)
-    client.tls_set(ca_certs=certifi.where(), tls_version=ssl.PROTOCOL_TLS)
 
     try:
         client.connect(settings.MQTT_BROKER_HOST, settings.MQTT_BROKER_PORT, 60)

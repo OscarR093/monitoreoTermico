@@ -114,8 +114,8 @@ La aplicación frontend se configura principalmente a través de variables de en
 
 ### Variables Comunes
 
-- `VITE_API_URL`: URL del backend (por defecto: http://localhost:3000)
-- `VITE_WS_URL`: URL para WebSocket (por defecto: ws://localhost:3000)
+- `VITE_API_URL`: URL del backend (por defecto: http://localhost:8420)
+- `VITE_WS_URL`: URL para WebSocket (por defecto: ws://localhost:8420)
 
 ## 🚀 Instalación y Ejecución
 

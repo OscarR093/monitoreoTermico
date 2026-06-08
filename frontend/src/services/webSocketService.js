@@ -11,15 +11,14 @@ const useWebSocket = (setTabsData, setPlcStatus) => {
       .then((data) => setEnv(data))
       .catch((error) => {
         console.error('Error al obtener variables de entorno:', error)
-        setEnv({ APP_ENV: 'development', WS_HOST: 'localhost:3000' })
+        setEnv({ APP_ENV: 'development', WS_HOST: 'localhost:8420' })
       })
   }, [])
 
   useEffect(() => {
     if (!env) return
 
-    const isProduction = env.APP_ENV === 'production'
-    const wsUrl = isProduction ? `wss://${env.WS_HOST}` : `ws://${env.WS_HOST}`
+    const wsUrl = `ws://${env.WS_HOST}`
 
     const ws = new WebSocket(wsUrl)
 

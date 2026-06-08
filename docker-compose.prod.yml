@@ -1,42 +1,12 @@
 services:
   # ----------------------------------------------------
-  # Traefik (Manejando HTTPS y MQTTS)
-  # ----------------------------------------------------
-  traefik:
-    image: traefik:v3.6
-    container_name: mi-traefik-proxy
-    restart: unless-stopped
-    command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.mqtts.address=:8883"
-      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8883:8883"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik-data:/data
-    networks:
-      - mi-red
-
-  # ----------------------------------------------------
   # Aplicación Node.js (NestJS Backend + React Frontend)
+  # Build local usando backend/Dockerfile
   # ----------------------------------------------------
   node-app:
-    # Usar imagen pre-construida de Docker Hub
-    image: oscarr093/monitoreotermico:3.1
-    # Para build local, comenta la línea anterior y descomenta las siguientes:
-    # build:
-    #   context: .
-    #   dockerfile: backend/Dockerfile
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: mi-aplicacion-nodejs
     restart: unless-stopped
     depends_on:
@@ -51,31 +21,27 @@ services:
       - JWT_EXPIRES_IN=1h
       - DOMAIN_URL=${DOMAIN_URL}
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=8420
       - SUPER_USER_USERNAME=${SUPER_USER_USERNAME}
       - SUPER_USER_PASSWORD=${SUPER_USER_PASSWORD}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID}
+    ports:
+      - "8420:8420"
     networks:
       - mi-red
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.node-app.rule=Host(`${DOMAIN_URL}`)"
-      - "traefik.http.routers.node-app.entrypoints=websecure"
-      - "traefik.http.routers.node-app.tls.certresolver=letsencrypt"
-      - "traefik.http.services.node-app.loadbalancer.server.port=3000"
 
   # ----------------------------------------------------
   # Base de Datos MongoDB
   # ----------------------------------------------------
   mongodb:
-    image: mongodb/mongodb-community-server:7.0-ubi8
+    image: mongo:7.0
     container_name: mi-database-mongo
     restart: unless-stopped
     stop_grace_period: 60s
     environment:
-      - MONGODB_INITDB_ROOT_USERNAME=${MONGO_USER}
-      - MONGODB_INITDB_ROOT_PASSWORD=${MONGO_PASS}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
     volumes:
       - ./mongo-data:/data/db
     networks:
@@ -88,7 +54,7 @@ services:
       start_period: 30s
 
   # ----------------------------------------------------
-  # Broker EMQX (Corregido)
+  # Broker EMQX (MQTT)
   # ----------------------------------------------------
   emqx:
     image: emqx/emqx:5.7.0
@@ -100,19 +66,10 @@ services:
       - "EMQX_AUTH__USER__1__PASSWORD=${MOSQUITTO_PASS}"
       - "EMQX_NODE__COOKIE=${EMQX_NODE_COOKIE}"
     ports:
-      - "1883:1883" # Opcional, para pruebas en la red local sin SSL
-      - "18083:18083" # Dashboard de EMQX
+      - "1883:1883"
+      - "18083:18083"
     networks:
       - mi-red
-    labels:
-      - "traefik.enable=true"
-      # --- ✅ Corrección: Usar el dominio definido en DOMAIN_URL ---
-      - "traefik.tcp.routers.emqx-secure.rule=HostSNI(`${DOMAIN_URL}`)"
-      - "traefik.tcp.routers.emqx-secure.entrypoints=mqtts"
-      - "traefik.tcp.routers.emqx-secure.tls.certresolver=letsencrypt"
-      - "traefik.tcp.services.emqx-secure.loadbalancer.server.port=1883"
 
 networks:
   mi-red:
-    external: true
-    name: monitoreotermico_mi-red
