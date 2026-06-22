@@ -156,6 +156,14 @@ export class TemperatureHistoryService {
     return this.temperatureHistoryModel.distinct('equipo');
   }
 
+  async getLatestByEquipment(equipmentName: string): Promise<TemperatureHistoryDocument | null> {
+    return this.temperatureHistoryModel
+      .findOne({ equipo: equipmentName })
+      .sort({ timestamp: -1 })
+      .select('temperatura timestamp -_id')
+      .exec() as unknown as TemperatureHistoryDocument | null;
+  }
+
   // Método para obtener estadísticas básicas de un equipo
   async getEquipmentStats(equipment: string): Promise<{
     count: number;

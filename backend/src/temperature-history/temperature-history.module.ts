@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TemperatureHistory, TemperatureHistorySchema } from './schemas/temperature-history.schema';
 import { TemperatureHistoryService } from './temperature-history.service';
 import { LegacyTemperatureHistoryController } from './legacy-temperature-history.controller';
+import { RealtimeTemperatureController } from './realtime-temperature.controller';
 import { AlertsModule } from '../alerts/alerts.module';
 
 @Module({
@@ -12,7 +13,7 @@ import { AlertsModule } from '../alerts/alerts.module';
     ]),
     AlertsModule,
   ],
-  controllers: [LegacyTemperatureHistoryController],
+  controllers: [LegacyTemperatureHistoryController, RealtimeTemperatureController],
   providers: [TemperatureHistoryService],
   exports: [TemperatureHistoryService],
 })
