@@ -43,7 +43,7 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
     volumes:
-      - ./mongo-data:/data/db
+      - mongo-data:/data/db
     networks:
       - mi-red
     healthcheck:
@@ -73,3 +73,5 @@ services:
 
 networks:
   mi-red:
+volumes:
+  mongo-data:
